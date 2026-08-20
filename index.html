@@ -1,0 +1,3176 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看護申請及派班系統</title>
+<style>
+  :root{
+    --bg: #eef2f4;
+    --panel: #ffffff;
+    --ink: #1c2b33;
+    --ink-soft: #5b6b73;
+    --line: #dde4e7;
+    --teal: #0f6674;
+    --teal-deep: #0a4a54;
+    --teal-soft: #e3f0f1;
+    --amber: #c67c2e;
+    --amber-soft: #fbf1e2;
+    --green: #2f8a5b;
+    --green-soft: #e6f4ec;
+    --red: #b3432f;
+    --red-soft: #fbeae6;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    line-height:1.5;
+  }
+  .app{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+  header.top{
+    display:flex;flex-direction:column;align-items:center;
+    padding:18px 4px 20px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  header.top h1{
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    font-size:24px;margin:0 0 16px;letter-spacing:1px;font-weight:700;
+    color:var(--teal-deep);text-align:center;width:100%;
+  }
+  header.top .eyebrow{
+    font-size:11px;letter-spacing:1.5px;color:var(--ink-soft);text-transform:uppercase;margin-bottom:2px;
+    text-align:center;
+  }
+  .back-btn{
+    border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    padding:7px 16px;border-radius:999px;font-size:13px;cursor:pointer;margin-top:2px;
+  }
+  .back-btn:hover{color:var(--teal-deep);border-color:var(--teal);}
+  section.screen{display:none;}
+  section.screen.active{display:block;}
+
+  .campus-indicator{
+    font-size:12.5px;color:var(--ink-soft);text-align:center;margin-bottom:10px;
+  }
+  .campus-indicator b{color:var(--teal-deep);}
+  .campus-indicator a{color:var(--teal);text-decoration:underline;cursor:pointer;}
+
+  .campus-pick-grid{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+  .campus-pick-btn{
+    padding:18px 20px;border-radius:12px;border:1px solid var(--line);background:#f7fafb;
+    font-size:16px;font-weight:700;color:var(--teal-deep);cursor:pointer;font-family:inherit;
+    transition:.15s;
+  }
+  .campus-pick-btn:hover{background:var(--teal-soft);border-color:var(--teal);transform:translateY(-2px);}
+
+  #unitPickList.campus-pick-grid{
+    flex-direction:row;flex-wrap:wrap;justify-content:center;
+  }
+  #unitPickList .campus-pick-btn{
+    padding:12px 18px;font-size:14px;flex:0 0 auto;
+  }
+  #unitPickList .dept-pick-btn{
+    background:var(--teal-soft);border-color:var(--teal);color:var(--teal-deep);
+    flex-basis:100%;font-weight:700;
+  }
+
+  select.locked-select{
+    background:#f0f0f0;color:var(--ink-soft);cursor:not-allowed;
+  }
+  .contact-priority-lock-note{
+    background:var(--amber-soft);color:var(--amber);border:1px solid #f0d9ad;
+    padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;
+  }
+
+  .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:6px;}
+  .menu-grid.menu-grid-4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:960px){.menu-grid.menu-grid-4{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:720px){.menu-grid{grid-template-columns:1fr;}}
+  .menu-card{
+    border:none;border-radius:14px;padding:30px 20px;text-align:center;cursor:pointer;
+    transition:.15s;box-shadow:0 2px 10px rgba(20,40,50,.05);font-family:inherit;
+  }
+  .menu-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,40,50,.1);}
+  .menu-card .mc-icon{font-size:32px;margin-bottom:10px;}
+  .menu-card .mc-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+  .menu-card .mc-desc{font-size:12.5px;opacity:.85;line-height:1.5;}
+  .mc-sky{background:#cfe7f7;color:#1f5578;}
+  .mc-lilac{background:#e3d5f7;color:#5a3592;}
+  .mc-peach{background:#fbdfb8;color:#8a5518;}
+  .mc-slate{background:#dde3e8;color:#3a4750;}
+
+  .gate-box{
+    max-width:360px;margin:50px auto;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:32px 28px;text-align:center;
+  }
+  .gate-box h2{margin:0 0 6px;color:var(--teal-deep);font-size:18px;}
+  .gate-box p{margin:0 0 18px;color:var(--ink-soft);font-size:13px;}
+  .gate-box input[type=password], .gate-box input[type=text]{margin-bottom:14px;text-align:center;letter-spacing:3px;}
+  .gate-box .choice-group{justify-content:center;margin-bottom:6px;}
+  .agency-pick-group label{position:relative;padding-right:16px;overflow:visible;}
+  .agency-count-badge{
+    display:none;position:absolute;top:-8px;right:-6px;
+    background:var(--red);color:#fff;font-size:10.5px;font-weight:700;
+    min-width:18px;height:18px;line-height:18px;border-radius:999px;text-align:center;padding:0 4px;
+  }
+  .agency-count-badge.show{display:block;}
+  .gate-preview-badge{
+    font-size:13px;color:var(--ink-soft);margin-bottom:12px;min-height:18px;
+  }
+  .gate-preview-badge b{color:var(--red);}
+  .gate-error{color:var(--red);font-size:12.5px;margin-top:12px;min-height:16px;}
+
+  .rank-badge{
+    font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;
+    background:var(--teal-soft);color:var(--teal-deep);
+  }
+
+  .subtabs{display:flex;gap:6px;background:#fff;padding:5px;border-radius:999px;border:1px solid var(--line);width:fit-content;margin-bottom:18px;}
+  .subtabs button{
+    border:none;background:transparent;padding:8px 18px;border-radius:999px;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  .subtabs button.active{background:var(--teal);color:#fff;}
+  .sub-panel{display:none;}
+  .sub-panel.active{display:block;}
+
+  .status-card-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;
+  }
+  .status-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;position:relative;overflow:hidden;
+  }
+  .status-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--amber);
+  }
+  .status-card.contacted::before{background:var(--green);}
+  .status-card.status-card-new{border:2px solid var(--teal);box-shadow:0 0 0 3px var(--teal-soft);}
+  .status-card .sc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .status-card .sc-unit{font-size:15px;font-weight:700;color:var(--teal-deep);}
+  .status-card .sc-patient{font-size:13px;color:var(--ink);margin-top:2px;}
+  .status-card .sc-meta{font-size:12px;color:var(--ink-soft);margin-top:10px;line-height:1.7;}
+  .status-card .sc-meta b{color:var(--ink);font-weight:600;}
+  .status-card .sc-wait{
+    display:inline-block;margin-top:10px;font-size:11.5px;font-weight:700;
+    padding:3px 10px;border-radius:999px;background:var(--amber-soft);color:var(--amber);
+  }
+  .status-card .sc-confirm{margin-top:12px;}
+  .status-card .confirm-btn{
+    width:100%;padding:10px 12px;border-radius:8px;border:none;
+    background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .status-card .confirm-btn:hover{background:#256b46;}
+  .status-card .sc-edit-row{display:flex;gap:8px;margin-top:10px;}
+  .status-card .sc-edit-btn, .status-card .sc-cancel-btn{
+    flex:1;padding:8px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .status-card .sc-edit-btn{background:#fff;border:1px solid var(--teal);color:var(--teal-deep);}
+  .status-card .sc-edit-btn:hover{background:var(--teal-soft);}
+  .status-card .sc-cancel-btn{background:#fff;border:1px solid var(--red);color:var(--red);}
+  .status-card .sc-cancel-btn:hover{background:var(--red-soft);}
+
+  .card{
+    background:var(--card-bg, var(--panel));
+    border:1px solid var(--card-border, var(--line));
+    border-radius:var(--radius);
+    padding:20px 22px;margin-bottom:16px;
+  }
+  .card h2{
+    font-size:13px;margin:0 0 16px;color:var(--card-accent-deep, var(--teal-deep));
+    letter-spacing:1px;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2::before{content:"";width:4px;height:14px;background:var(--card-accent, var(--teal));border-radius:2px;display:inline-block;}
+
+  /* 群組粉嫩配色 */
+  .card.c-sky{      --card-bg:#d6ecfa; --card-border:#a9d6f0; --card-accent:#2f7ab0; --card-accent-deep:#1c4f70; }
+  .card.c-blush{    --card-bg:#fbdde7; --card-border:#f2b3c9; --card-accent:#c85d84; --card-accent-deep:#8a3652; }
+  .card.c-mint{     --card-bg:#d4f2e1; --card-border:#a3e2c1; --card-accent:#379764; --card-accent-deep:#1f5c3c; }
+  .card.c-lilac{    --card-bg:#e6d8f9; --card-border:#cdb0f0; --card-accent:#7c50c4; --card-accent-deep:#4f2f80; }
+  .card.c-peach{    --card-bg:#fce2bf; --card-border:#f6c383; --card-accent:#c47a28; --card-accent-deep:#7a4a1a; }
+
+  .card.c-sky input:focus, .card.c-sky select:focus{outline-color:var(--card-accent);border-color:var(--card-accent);}
+  .card.c-blush input:focus, .card.c-blush select:focus{outline-color:var(--card-accent);border-color:var(--card-accent);}
+  .card.c-mint input:focus, .card.c-mint select:focus{outline-color:var(--card-accent);border-color:var(--card-accent);}
+  .card.c-lilac input:focus, .card.c-lilac select:focus{outline-color:var(--card-accent);border-color:var(--card-accent);}
+  .card.c-peach input:focus, .card.c-peach select:focus{outline-color:var(--card-accent);border-color:var(--card-accent);}
+
+  .card .choice-group label{background:#fff;}
+  .card.c-sky .choice-group label:has(input:checked){border-color:var(--card-accent);background:#b9dcf3;color:var(--card-accent-deep);}
+  .card.c-blush .choice-group label:has(input:checked){border-color:var(--card-accent);background:#f5c2d5;color:var(--card-accent-deep);}
+  .card.c-mint .choice-group label:has(input:checked){border-color:var(--card-accent);background:#b6e8cd;color:var(--card-accent-deep);}
+  .card.c-lilac .choice-group label:has(input:checked){border-color:var(--card-accent);background:#d6bff2;color:var(--card-accent-deep);}
+  .card.c-peach .choice-group label:has(input:checked){border-color:var(--card-accent);background:#f8d29e;color:var(--card-accent-deep);}
+
+  .card .conditional{background:rgba(255,255,255,.6);border-left-color:var(--card-accent, var(--teal));}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:640px){.row{grid-template-columns:1fr;}}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  label.field-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink);}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  input[type=text], input[type=number], input[type=date], input[type=time], select{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+    font-size:14px;background:#fcfdfd;color:var(--ink);font-family:inherit;
+  }
+  input:focus, select:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .choice-group{display:flex;flex-wrap:wrap;gap:8px;}
+  .choice-group label{
+    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px;
+    font-size:13.5px;cursor:pointer;background:#fcfdfd;user-select:none;
+  }
+  .choice-group input{accent-color:var(--teal);width:15px;height:15px;flex:none;}
+  .choice-group label:has(input:checked){border-color:var(--teal);background:var(--teal-soft);color:var(--teal-deep);font-weight:600;}
+  .required::after{content:" *";color:var(--red);}
+
+  .conditional{
+    margin-top:10px;padding:12px;border-left:3px solid var(--teal);background:var(--teal-soft);border-radius:0 8px 8px 0;
+    display:none;
+  }
+  .conditional.show{display:block;}
+
+  .submit-row{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  button.primary{
+    background:var(--teal);color:#fff;border:none;padding:12px 26px;border-radius:8px;
+    font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px;
+  }
+  button.primary:hover{background:var(--teal-deep);}
+  button.ghost{
+    background:transparent;border:1px solid var(--line);color:var(--ink-soft);
+    padding:12px 18px;border-radius:8px;font-size:14px;cursor:pointer;
+  }
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--teal-deep);color:#fff;padding:12px 22px;border-radius:8px;
+    font-size:14px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 6px 20px rgba(0,0,0,.18);
+    z-index:50;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* records */
+  .records-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .records-toolbar select, .records-toolbar input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff;}
+  .record{
+    background:#fbfaff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:12px;
+  }
+  .record.record-new{
+    border:2px solid var(--teal);box-shadow:0 0 0 3px var(--teal-soft);
+  }
+  .record.record-new-dispatch{
+    border:2px solid var(--amber);box-shadow:0 0 0 3px var(--amber-soft);
+    animation:newDispatchPulse 2s ease-in-out infinite;
+  }
+  @keyframes newDispatchPulse{
+    0%,100%{box-shadow:0 0 0 3px var(--amber-soft);}
+    50%{box-shadow:0 0 0 6px var(--amber-soft);}
+  }
+  .record.record-overdue{
+    border:2px solid var(--red);box-shadow:0 0 0 3px var(--red-soft);
+    animation:overduePulse 2s ease-in-out infinite;
+  }
+  @keyframes overduePulse{
+    0%,100%{box-shadow:0 0 0 3px var(--red-soft);}
+    50%{box-shadow:0 0 0 6px var(--red-soft);}
+  }
+  .record.record-cancelled{
+    background:#fbf5f3;border:1px solid #f0c4b8;opacity:.85;
+  }
+  .apn-cancelled-note{
+    margin-top:10px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:700;
+    background:var(--red-soft);color:var(--red);
+  }
+  .new-badge{
+    display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;
+    padding:2px 9px;border-radius:999px;margin-right:8px;vertical-align:middle;
+  }
+  .new-count-banner{
+    background:var(--red-soft);color:var(--red);border:1px solid #f0c4b8;
+    padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:14px;
+  }
+  .submit-confirm-banner{
+    background:var(--green-soft);color:var(--green);border:1px solid #bfe3cd;
+    padding:12px 16px;border-radius:8px;font-size:13.5px;margin-bottom:16px;
+  }
+  .submit-confirm-banner b{color:#1f5c3c;}
+
+  .edit-mode-banner{
+    background:var(--amber-soft);color:var(--amber);border:1px solid #f0d9ad;
+    padding:12px 16px;border-radius:8px;font-size:13.5px;margin-bottom:16px;font-weight:600;
+  }
+
+  .admin-block{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;margin-bottom:16px;
+  }
+  .admin-block-title{
+    font-size:13px;margin:0 0 16px;color:var(--teal-deep);letter-spacing:1px;text-transform:uppercase;
+    font-weight:700;
+  }
+  .admin-campus-card, .admin-agency-row{
+    border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#fbfcfd;
+  }
+  .admin-campus-card .admin-campus-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .admin-campus-card .admin-campus-name{font-size:15px;font-weight:700;color:var(--teal-deep);}
+  .admin-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:640px){.admin-row-2{grid-template-columns:1fr;}}
+  .admin-field label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;}
+  .admin-field input, .admin-field textarea{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;
+  }
+  .admin-field textarea{min-height:60px;resize:vertical;}
+  .admin-auth-note{
+    font-size:11px;color:var(--ink-soft);margin-top:5px;line-height:1.6;
+  }
+  .admin-auth-note code{
+    background:#f0f0f0;padding:1px 6px;border-radius:4px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    color:var(--teal-deep);
+  }
+  .admin-unit-account-list{
+    margin-top:6px;max-height:140px;overflow-y:auto;background:#fafafa;border:1px solid var(--line);
+    border-radius:6px;padding:8px 10px;font-size:11px;line-height:1.9;
+  }
+  .admin-unit-agency-list{
+    margin-top:6px;max-height:320px;overflow-y:auto;background:#fafafa;border:1px solid var(--line);
+    border-radius:6px;padding:6px 10px;
+  }
+  .admin-unit-agency-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding:8px 0;border-bottom:1px solid #eee;
+  }
+  .admin-unit-agency-row:last-child{border-bottom:none;}
+  .admin-unit-agency-name{font-size:13px;font-weight:600;color:var(--ink);flex:0 0 44px;}
+  .admin-unit-agency-selects{display:flex;gap:6px;flex-wrap:wrap;flex:1;justify-content:flex-end;}
+  .admin-unit-agency-row select{
+    padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;
+    max-width:88px;
+  }
+  .admin-remove-btn{
+    border:1px solid var(--red);color:var(--red);background:#fff;border-radius:7px;
+    padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;
+  }
+  .admin-agency-row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;}
+  @media (max-width:640px){.admin-agency-row{grid-template-columns:1fr;}}
+  .admin-new-name-input{font-size:15px;font-weight:700;color:var(--teal-deep);border:1px solid var(--line);border-radius:7px;padding:6px 10px;}
+  .record-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .record-title{font-size:15px;font-weight:700;color:var(--teal-deep);}
+  .record-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .badge{
+    font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .badge.pending{background:var(--amber-soft);color:var(--amber);}
+  .badge.done{background:var(--green-soft);color:var(--green);}
+  .record-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:8px 16px;margin-top:12px;font-size:13px;
+  }
+  .record-grid .k{color:var(--ink-soft);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;}
+  .record-grid .v{font-weight:600;margin-top:1px;}
+  .record-actions{margin-top:14px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+  .record-actions button{
+    font-size:12.5px;padding:7px 14px;border-radius:7px;border:1px solid var(--line);
+    background:#fff;cursor:pointer;color:var(--ink-soft);
+  }
+  .record-actions button.copy-btn{border-color:var(--teal);color:var(--teal-deep);font-weight:700;background:var(--teal-soft);}
+  .record-actions button.send-btn{border-color:var(--teal-deep);color:#fff;font-weight:700;background:var(--teal);}
+  .record-actions button.send-btn:hover{background:var(--teal-deep);}
+  .record-actions button.del-btn{border-color:var(--red);color:var(--red);}
+
+  .dispatch-send-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .dispatch-send-row .send-btn, .dispatch-send-row .send-btn-alt{
+    border:none;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .dispatch-send-row .send-btn{background:var(--teal);color:#fff;}
+  .dispatch-send-row .send-btn:hover{background:var(--teal-deep);}
+  .dispatch-send-row .send-btn-alt{background:#fff;color:var(--teal-deep);border:1px solid var(--teal);}
+  .dispatch-send-row .send-btn-alt:hover{background:var(--teal-soft);}
+  .dispatch-send-row .send-row-empty{font-size:12.5px;color:var(--ink-soft);}
+  .empty{text-align:center;color:var(--ink-soft);padding:50px 10px;font-size:14px;}
+  .shared-note{font-size:12px;color:var(--ink-soft);margin-bottom:14px;padding:10px 12px;background:var(--amber-soft);border-radius:8px;}
+
+  .badge.contacted{background:var(--green-soft);color:var(--green);}
+
+  .dispatch-block{
+    margin-top:14px;padding:14px;border-radius:8px;background:#f6eefb;border:1px solid #e6d7f5;
+  }
+  .dispatch-block .dispatch-title{
+    font-size:11.5px;font-weight:700;color:#6a4ba3;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+  }
+  .dispatch-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+  @media (max-width:640px){.dispatch-row{grid-template-columns:1fr 1fr;}}
+  .dispatch-row .pri-field label{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:3px;}
+  .dispatch-row select{width:100%;padding:7px 8px;border:1px solid #e0cdf2;border-radius:7px;font-size:13px;background:#fff;}
+  .status-field{display:flex;align-items:center;gap:10px;margin-bottom:2px;flex-wrap:wrap;}
+  .status-field label{font-size:11px;color:var(--ink-soft);}
+  .status-field select{padding:7px 10px;border:1px solid #e0cdf2;border-radius:7px;font-size:13px;background:#fff;}
+  .summary-box{
+    margin-top:10px;width:100%;min-height:120px;border:1px solid #e0cdf2;border-radius:7px;
+    padding:10px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    background:#fff;color:var(--ink);resize:vertical;white-space:pre-wrap;display:none;
+  }
+  .summary-box.show{display:block;}
+
+  .agency-status-block{
+    margin-top:14px;padding:14px;border-radius:8px;background:#fdf1e4;border:1px solid #fbdfb8;
+  }
+  .agency-status-block .dispatch-title{
+    font-size:11.5px;font-weight:700;color:#a8702e;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+  }
+  .agency-status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media (max-width:640px){.agency-status-row{grid-template-columns:1fr;}}
+  .agency-status-row .pri-field label{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:3px;}
+  .agency-status-row select, .agency-status-row input{
+    width:100%;padding:7px 8px;border:1px solid #f0cf9c;border-radius:7px;font-size:13px;background:#fff;
+  }
+
+  .agency-progress-note{
+    margin-top:12px;padding:9px 12px;border-radius:8px;font-size:12.5px;line-height:1.8;
+    background:#f6f2ea;border:1px solid #e6ddc9;color:var(--ink);
+  }
+  .agency-progress-note.searching{background:var(--amber-soft);border-color:#f0d9ad;}
+  .agency-progress-note.assigned{background:var(--green-soft);border-color:#bfe3cd;}
+  .agency-progress-note.declined{background:var(--red-soft);border-color:#f0c4b8;}
+  .agency-progress-note .apn-label{font-weight:700;color:var(--ink-soft);margin-right:4px;}
+  .agency-progress-note .apn-company{font-weight:700;margin-right:8px;color:var(--teal-deep);}
+  .agency-progress-note .apn-status{font-weight:700;margin-right:10px;}
+  .agency-progress-note .apn-item{margin-right:12px;color:var(--ink-soft);}
+  .agency-progress-note .apn-warning{margin-top:6px;font-weight:700;color:var(--red);}
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB0qSxJBPn7cw_EeNsKxx3gCoGUrV4yfWg",
+    authDomain: "caregiver-system-565b5.firebaseapp.com",
+    projectId: "caregiver-system-565b5",
+    storageBucket: "caregiver-system-565b5.firebasestorage.app",
+    messagingSenderId: "300200708929",
+    appId: "1:300200708929:web:90f7dde1e59ddb70b7afc0"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.NONE); // 重新整理/關閉分頁後就必須重新輸入密碼，避免共用電腦殘留登入狀態
+  const APPLICATIONS_COL = 'applications';
+  const CONFIG_DOC = db.collection('config').doc('app');
+  const AUTH_EMAIL_DOMAIN = 'nsapp.local'; // 內部用的虛擬網域，僅作為 Firebase 帳號識別用，不會真的收信
+
+  // 依名稱產生固定、不重複的帳號代碼，避免中文字直接放進 email
+  function hashSlug(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+    return h.toString(36);
+  }
+  function emailForCampusApply(campus){ return `apply-${hashSlug(campus)}@${AUTH_EMAIL_DOMAIN}`; }
+  function emailForUnitApply(campus, unit){ return `apply-${hashSlug(campus+'::'+unit)}@${AUTH_EMAIL_DOMAIN}`; }
+  function emailForCampusDispatch(campus){ return `dispatch-${hashSlug(campus)}@${AUTH_EMAIL_DOMAIN}`; }
+  function emailForAgency(agency){ return `agency-${hashSlug(agency)}@${AUTH_EMAIL_DOMAIN}`; }
+  function emailForAdmin(){ return `admin@${AUTH_EMAIL_DOMAIN}`; }
+
+  // 用 email+密碼向 Firebase 進行真正的登入驗證。密碼錯誤或帳號不存在都會回傳 false。
+  async function firebaseSignIn(email, password){
+    if(auth.currentUser && auth.currentUser.email === email) return true; // 已經是這個帳號登入中，不用重複登入
+    try{
+      await auth.signInWithEmailAndPassword(email, password);
+      return true;
+    }catch(err){
+      console.warn('登入失敗', email, err.code);
+      return false;
+    }
+  }
+
+  // 瀏覽器通知：只在分頁開著（含背景分頁）時會跳出，分頁/瀏覽器關閉後就收不到
+  function requestNotificationPermission(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission === 'default'){
+      Notification.requestPermission();
+    }
+  }
+  function showBrowserNotification(title, body){
+    if(!('Notification' in window)) return;
+    if(Notification.permission !== 'granted') return;
+    try{
+      const n = new Notification(title, { body, icon: undefined });
+      n.onclick = ()=>{ window.focus(); n.close(); };
+    }catch(err){ console.warn('通知顯示失敗', err); }
+  }
+
+  // 公開可讀的統計計數（不需要登入即可讀取），讓派班管理／照服社在輸入密碼「之前」
+  // 就能先看到有幾筆新訊息。寫入這份資料的動作，一定發生在已經登入的使用者身上。
+  const PUBLIC_STATS_DOC = db.collection('publicStats').doc('counts');
+  async function writePublicStat(group, key, count){
+    if(!key) return;
+    try{
+      await PUBLIC_STATS_DOC.set({ [group]: { [key]: count } }, { merge: true });
+    }catch(err){ console.warn('寫入公開統計失敗', err); }
+  }
+  async function readPublicStat(group, key){
+    try{
+      const snap = await PUBLIC_STATS_DOC.get();
+      if(!snap.exists) return 0;
+      const data = snap.data();
+      return (data[group] && data[group][key]) || 0;
+    }catch(err){ console.warn('讀取公開統計失敗', err); return 0; }
+  }
+</script>
+<div id="appLoadingOverlay" style="position:fixed;inset:0;background:#eef2f4;display:flex;align-items:center;justify-content:center;font-size:14px;color:#5b6b73;z-index:999;">載入系統設定中…</div>
+<div class="app" id="appRoot" style="visibility:hidden;">
+
+  <header class="top">
+    <div class="eyebrow">護理部 · 個案照護支援</div>
+    <h1>看護申請及派班系統</h1>
+    <div id="campusIndicator" class="campus-indicator" style="display:none;"></div>
+    <button id="backBtn" class="back-btn" style="display:none;" onclick="handleBackButton()">← 返回主選單</button>
+  </header>
+
+  <!-- ===================== CAMPUS SELECT ===================== -->
+  <section id="screenCampusSelect" class="screen">
+    <div class="gate-box" style="max-width:420px;">
+      <h2>請選擇院區</h2>
+      <p>不同院區的申請資料、單位清單與派班管理密碼皆各自獨立</p>
+      <div class="campus-pick-grid">
+        <button type="button" class="campus-pick-btn" onclick="selectCampus('新店')">🏥 新店院區</button>
+        <button type="button" class="campus-pick-btn" onclick="selectCampus('安康')">🏥 安康院區</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <section id="screenMenu" class="screen active">
+    <div class="menu-grid menu-grid-4">
+      <button type="button" class="menu-card mc-sky" onclick="enterFormFlow()">
+        <div class="mc-icon">🏥</div>
+        <div class="mc-title">護理單位申請</div>
+        <div class="mc-desc">各單位護理師填寫看護申請需求（需先選擇院區、輸入密碼）</div>
+      </button>
+      <button type="button" class="menu-card mc-lilac" onclick="enterDispatchFlow()">
+        <div class="mc-icon">🗂️</div>
+        <div class="mc-title">護理部派班管理</div>
+        <div class="mc-desc">安排聯繫順位、追蹤派案狀態（需先選擇院區、輸入密碼）</div>
+      </button>
+      <button type="button" class="menu-card mc-peach" onclick="enterAgencyGate()">
+        <div class="mc-icon">🤝</div>
+        <div class="mc-title">照服社</div>
+        <div class="mc-desc">侒侒／順心／同心園／匯鑫查看指派給貴公司的需求（服務所有院區）</div>
+      </button>
+      <button type="button" class="menu-card mc-slate" onclick="enterAdminGate()">
+        <div class="mc-icon">⚙️</div>
+        <div class="mc-title">管理</div>
+        <div class="mc-desc">新增／修改院區、單位、密碼等系統設定（需輸入管理員密碼）</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== NURSING UNIT APPLY PASSWORD GATE ===================== -->
+  <!-- ===================== UNIT SELECT (護理單位申請專用) ===================== -->
+  <section id="screenUnitSelect" class="screen">
+    <div class="gate-box" style="max-width:460px;">
+      <h2>請選擇您的單位</h2>
+      <p>每個單位都有各自獨立的登入密碼，選好單位後會進入該單位的登入畫面</p>
+      <div id="unitPickList" class="campus-pick-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== NURSING UNIT APPLY PASSWORD GATE ===================== -->
+  <section id="screenFormGate" class="screen">
+    <div class="gate-box">
+      <h2>護理單位申請</h2>
+      <p>請輸入 <span id="formGateCampusLabel"></span> 的登入密碼</p>
+      <input type="text" id="formPassword" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter'){checkFormPassword();}">
+      <button type="button" class="primary" onclick="checkFormPassword()">登入</button>
+      <div class="gate-error" id="formPasswordError"></div>
+    </div>
+  </section>
+
+  <!-- ===================== FORM ===================== -->
+  <section id="screenForm" class="screen">
+
+    <div class="subtabs">
+      <button type="button" id="subTabApply" class="active" onclick="switchFormSub('apply')">新增申請</button>
+      <button type="button" id="subTabStatus" onclick="switchFormSub('status')">派班進度查詢</button>
+    </div>
+
+    <div id="formSubApply" class="sub-panel active">
+    <div id="submitConfirmBanner" class="submit-confirm-banner" style="display:none;"></div>
+    <div id="editModeBanner" class="edit-mode-banner" style="display:none;"></div>
+    <form id="applyForm">
+
+      <div class="card c-sky" id="unitAndApplicantCard">
+        <h2>申請單位與人員</h2>
+        <div class="row">
+          <div class="field">
+            <label class="field-label required" id="unitFieldLabel">單位</label>
+            <select name="unit" required>
+              <option value="">請選擇</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label required" id="applicantNameLabel">申請人姓名（護理師）</label>
+            <input type="text" name="applicantName" placeholder="請輸入全名" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="card c-blush">
+        <h2>病人基本資料</h2>
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">病人姓名</label>
+            <input type="text" name="patientName" required>
+          </div>
+          <div class="field">
+            <label class="field-label required">年齡</label>
+            <input type="number" name="age" min="0" max="150" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">病人目前所屬床號</label>
+            <input type="text" name="currentBed" placeholder="單位+床號，例：4A123" required>
+            <div class="hint">ER 病人填寫病歷號碼</div>
+          </div>
+          <div class="field" id="erNoteField" style="display:none;">
+            <label class="field-label">病歷號碼（ER 病人）</label>
+            <input type="text" name="erChartNo" placeholder="請輸入病歷號碼">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label required">預計轉出或入住的單位及床號</label>
+          <div class="choice-group">
+            <label><input type="radio" name="transferOption" value="同上" required> 同上</label>
+            <label><input type="radio" name="transferOption" value="手輸入"> 手輸入</label>
+          </div>
+          <div class="conditional" id="transferManualBox">
+            <input type="text" name="transferBedManual" placeholder="請輸入預計轉出或入住的單位及床號">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">病人性別</label>
+            <div class="choice-group">
+              <label><input type="radio" name="gender" value="男" required> 男</label>
+              <label><input type="radio" name="gender" value="女"> 女</label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label required">病人身份</label>
+            <select name="identity" required>
+              <option value="">請選擇</option>
+              <option>員工</option>
+              <option>神職人員</option>
+              <option>北區老人</option>
+              <option>一般</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label required">病人意識狀況</label>
+          <select name="consciousness" required>
+            <option value="">請選擇</option>
+            <option>清楚</option>
+            <option>不清楚</option>
+            <option>混亂</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card c-mint">
+        <h2>病人狀況（可複選）</h2>
+
+        <div class="field">
+          <label class="field-label required">病人特殊提醒</label>
+          <div class="choice-group" data-group="specialAlerts">
+            <label><input type="checkbox" name="specialAlerts" value="無"> 無</label>
+            <label><input type="checkbox" name="specialAlerts" value="失智"> 失智</label>
+            <label><input type="checkbox" name="specialAlerts" value="重聽"> 重聽</label>
+            <label><input type="checkbox" name="specialAlerts" value="盲"> 盲</label>
+            <label><input type="checkbox" name="specialAlerts" value="中風"> 中風</label>
+            <label><input type="checkbox" name="specialAlerts" value="腦出血"> 腦出血</label>
+            <label><input type="checkbox" name="specialAlerts" value="其他" class="other-toggle" data-target="specialAlertsOtherBox"> 其他</label>
+          </div>
+          <div class="conditional" id="specialAlertsOtherBox">
+            <input type="text" name="specialAlertsOther" placeholder="請說明其他特殊提醒">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label required">管路</label>
+          <div class="choice-group" data-group="tubes">
+            <label><input type="checkbox" name="tubes" value="無管路"> 無管路</label>
+            <label><input type="checkbox" name="tubes" value="IV"> IV</label>
+            <label><input type="checkbox" name="tubes" value="鼻胃管"> 鼻胃管</label>
+            <label><input type="checkbox" name="tubes" value="尿管"> 尿管</label>
+            <label><input type="checkbox" name="tubes" value="氣切管"> 氣切管</label>
+            <label><input type="checkbox" name="tubes" value="JP引流管"> JP引流管</label>
+            <label><input type="checkbox" name="tubes" value="洗腎管"> 洗腎管</label>
+            <label><input type="checkbox" name="tubes" value="胸管"> 胸管</label>
+            <label><input type="checkbox" name="tubes" value="人工造口"> 人工造口</label>
+            <label><input type="checkbox" name="tubes" value="其他" class="other-toggle" data-target="tubesOtherBox"> 其他</label>
+          </div>
+          <div class="conditional" id="tubesOtherBox">
+            <input type="text" name="tubesOther" placeholder="請說明其他管路">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label required">病人特殊需求</label>
+          <div class="choice-group" data-group="specialNeeds">
+            <label><input type="checkbox" name="specialNeeds" value="可自理"> 可自理</label>
+            <label><input type="checkbox" name="specialNeeds" value="攙扶"> 攙扶</label>
+            <label><input type="checkbox" name="specialNeeds" value="需翻身"> 需翻身</label>
+            <label><input type="checkbox" name="specialNeeds" value="臥床"> 臥床</label>
+            <label><input type="checkbox" name="specialNeeds" value="虛弱"> 虛弱</label>
+            <label><input type="checkbox" name="specialNeeds" value="術後"> 術後</label>
+            <label><input type="checkbox" name="specialNeeds" value="肢體無力"> 肢體無力</label>
+            <label><input type="checkbox" name="specialNeeds" value="其他" class="other-toggle" data-target="specialNeedsOtherBox"> 其他</label>
+          </div>
+          <div class="conditional" id="specialNeedsOtherBox">
+            <input type="text" name="specialNeedsOther" placeholder="請說明其他特殊需求">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">約束</label>
+            <div class="choice-group">
+              <label><input type="radio" name="restraint" value="是" required> 是</label>
+              <label><input type="radio" name="restraint" value="否"> 否</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label required">隔離/感染</label>
+          <div class="choice-group" data-group="isolation">
+            <label><input type="checkbox" name="isolation" value="無"> 無</label>
+            <label><input type="checkbox" name="isolation" value="TB"> TB</label>
+            <label><input type="checkbox" name="isolation" value="疥瘡"> 疥瘡</label>
+            <label><input type="checkbox" name="isolation" value="Covid 有通報"> Covid 有通報</label>
+            <label><input type="checkbox" name="isolation" value="其他" class="other-toggle" data-target="isolationOtherBox"> 其他</label>
+          </div>
+          <div class="conditional" id="isolationOtherBox">
+            <input type="text" name="isolationOther" placeholder="請說明其他隔離/感染狀況">
+          </div>
+        </div>
+      </div>
+
+      <div class="card c-lilac">
+        <h2>社服個案</h2>
+        <div class="field">
+          <label class="field-label required">社服個案</label>
+          <div class="choice-group">
+            <label><input type="radio" name="socialCase" value="是" required> 是</label>
+            <label><input type="radio" name="socialCase" value="否"> 否</label>
+          </div>
+        </div>
+        <div class="conditional" id="socialCaseBox">
+          <div class="row">
+            <div class="field">
+              <label class="field-label">主責社工姓名</label>
+              <input type="text" name="socialWorkerName" placeholder="請輸入社工姓名">
+            </div>
+            <div class="field">
+              <label class="field-label">電話簡碼</label>
+              <input type="text" name="socialWorkerPhone" placeholder="請輸入電話簡碼">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card c-peach">
+        <h2>看護需求</h2>
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">看護需求性別</label>
+            <div class="choice-group">
+              <label><input type="radio" name="caregiverGender" value="男" required> 男</label>
+              <label><input type="radio" name="caregiverGender" value="女"> 女</label>
+              <label><input type="radio" name="caregiverGender" value="皆可"> 皆可</label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label required">看護語言</label>
+            <div class="choice-group">
+              <label><input type="radio" name="caregiverLanguage" value="國語" required> 國語</label>
+              <label><input type="radio" name="caregiverLanguage" value="台語"> 台語</label>
+              <label><input type="radio" name="caregiverLanguage" value="均可"> 均可</label>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label required">需求班別</label>
+          <div class="choice-group">
+            <label><input type="radio" name="shiftType" value="全班" required> 全班</label>
+            <label><input type="radio" name="shiftType" value="日半班"> 日半班</label>
+            <label><input type="radio" name="shiftType" value="夜半班"> 夜半班</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label class="field-label required">預計開始申請日期</label>
+            <input type="date" name="startDate" required>
+          </div>
+          <div class="field">
+            <label class="field-label required">預計開始申請時間</label>
+            <input type="time" name="startTime" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="card c-lilac">
+        <h2>聯繫照服社順序（選填）</h2>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;">
+          設定好順位後，送出申請時會自動聯繫「第一順位」的公司（複製需求文字、標記已聯絡），不用再另外點擊。
+        </p>
+        <div class="contact-priority-lock-note" id="contactPriorityLockNote" style="display:none;">
+          🔒 此順序由「管理」統一設定，各單位無法自行更改。如需調整，請聯繫管理員修改。
+        </div>
+        <div class="dispatch-row">
+          <div class="pri-field">
+            <label>第一順位</label>
+            <select name="contactPriority1" id="formContactPriority1"><option value="">未選擇</option></select>
+          </div>
+          <div class="pri-field">
+            <label>第二順位</label>
+            <select name="contactPriority2" id="formContactPriority2"><option value="">未選擇</option></select>
+          </div>
+          <div class="pri-field">
+            <label>第三順位</label>
+            <select name="contactPriority3" id="formContactPriority3"><option value="">未選擇</option></select>
+          </div>
+          <div class="pri-field">
+            <label>第四順位</label>
+            <select name="contactPriority4" id="formContactPriority4"><option value="">未選擇</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="button" class="ghost" id="cancelEditBtn" style="display:none;" onclick="cancelEditMode()">取消編輯</button>
+        <button type="button" class="ghost" onclick="resetForm()">清除表單</button>
+        <button type="submit" class="primary" id="formSubmitBtn">送出申請</button>
+      </div>
+    </form>
+    </div>
+
+    <div id="formSubStatus" class="sub-panel">
+      <div class="shared-note">自動顯示 <b id="statusBoardUnitLabel"></b> 「尚未確認」的申請案件（僅限本單位，看不到其他單位的資料）。當照服社回報狀態為「派班」時，卡片下方會出現綠色的「護理師確認看護已到位」按鈕，點下去這筆案件才會從清單移除；在那之前即使已經聯絡看護公司，案件都會持續顯示。</div>
+      <div class="records-toolbar">
+        <select id="statusFilterUnit" style="display:none;"><option value="">全部單位</option></select>
+        <button class="ghost" onclick="loadStatusBoard()">重新整理</button>
+      </div>
+      <div id="statusBoardNewBanner"></div>
+      <div id="statusBoardWrap"><div class="empty">載入中…</div></div>
+    </div>
+
+  </section>
+
+  <!-- ===================== DISPATCH PASSWORD GATE ===================== -->
+  <section id="screenDispatchGate" class="screen">
+    <div class="gate-box">
+      <h2>護理部派班管理</h2>
+      <p>請輸入管理密碼以進入</p>
+      <div id="dispatchGatePreview" class="gate-preview-badge"></div>
+      <input type="text" id="dispatchPassword" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter'){checkDispatchPassword();}">
+      <button type="button" class="primary" onclick="checkDispatchPassword()">登入</button>
+      <div class="gate-error" id="dispatchPasswordError"></div>
+    </div>
+  </section>
+
+  <!-- ===================== DISPATCH MANAGEMENT ===================== -->
+  <section id="screenDispatch" class="screen">
+    <div class="shared-note">此頁面為共用資料，護理部可在此為每筆申請安排聯繫的看護公司順位、更新狀態，並一鍵複製需求整理文字給看護社。</div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">資料庫記錄查詢</div>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">
+        查看資料庫裡「所有」申請紀錄（不受院區、狀態篩選限制），包含已被刪除但尚未清除的資料，
+        避免資料因為篩選條件或誤刪而找不到。
+      </p>
+      <button type="button" class="ghost" onclick="enterAdminRecords()">📋 開啟資料庫記錄查詢</button>
+      <button type="button" class="ghost" onclick="enterAdminLogs()" style="margin-left:8px;">📝 開啟異動紀錄查詢</button>
+    </div>
+
+    <div class="records-toolbar">
+      <select id="filterUnit"><option value="">全部單位</option></select>
+      <select id="filterStatus">
+        <option value="">全部狀態</option>
+        <option value="pending">待處理</option>
+        <option value="contacted">已聯絡看護公司</option>
+      </select>
+      <button class="ghost" onclick="loadRecords()">重新整理</button>
+    </div>
+    <div id="dispatchNewBanner"></div>
+    <div id="recordsWrap"><div class="empty">載入中…</div></div>
+  </section>
+
+  <!-- ===================== AGENCY: PICK COMPANY ===================== -->
+  <section id="screenAgencyGate" class="screen">
+    <div class="gate-box">
+      <h2>照服社</h2>
+      <p>請選擇貴公司並輸入密碼</p>
+      <div class="choice-group agency-pick-group" id="agencyPickList"></div>
+      <input type="text" id="agencyPassword" placeholder="請輸入密碼" style="margin-top:14px;" onkeydown="if(event.key==='Enter'){enterAgency();}">
+      <button type="button" class="primary" onclick="enterAgency()" style="margin-top:10px;">進入查看派案</button>
+      <div class="gate-error" id="agencyPickError"></div>
+    </div>
+  </section>
+
+  <!-- ===================== AGENCY: RECORDS ===================== -->
+  <section id="screenAgency" class="screen">
+    <div class="shared-note" id="agencyNote"></div>
+    <div id="agencyNewBanner"></div>
+    <div id="agencyWrap"><div class="empty">載入中…</div></div>
+  </section>
+
+  <!-- ===================== ADMIN PASSWORD GATE ===================== -->
+  <section id="screenAdminGate" class="screen">
+    <div class="gate-box">
+      <h2>管理</h2>
+      <p>請輸入管理員密碼</p>
+      <input type="text" id="adminPassword" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter'){checkAdminPassword();}">
+      <button type="button" class="primary" onclick="checkAdminPassword()">登入</button>
+      <div class="gate-error" id="adminPasswordError"></div>
+    </div>
+  </section>
+
+  <!-- ===================== ADMIN PANEL ===================== -->
+  <section id="screenAdmin" class="screen">
+    <div class="shared-note">在這裡新增／修改院區、單位清單。<b>注意：登入密碼已經改用 Firebase Authentication 真正驗證，這裡的密碼欄位只是給你自己看的備忘紀錄，不會真的生效！要改真正的登入密碼，請到 Firebase 主控台的 Authentication 頁面操作，帳號請對照下面顯示的「實際登入帳號」。</b></div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">資料庫記錄查詢</div>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">
+        查看資料庫裡「所有」申請紀錄（不受院區、狀態篩選限制），包含已被刪除但尚未清除的資料，
+        避免資料因為篩選條件或誤刪而找不到。
+      </p>
+      <button type="button" class="ghost" onclick="enterAdminRecords()">📋 開啟資料庫記錄查詢</button>
+      <button type="button" class="ghost" onclick="enterAdminLogs()" style="margin-left:8px;">📝 開啟異動紀錄查詢</button>
+    </div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">照服社逾期未回覆統計</div>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">
+        統計每家照服社「該接班卻超過 45 分鐘沒有回覆」的次數，依月份分頁匯出成 Excel。
+        （系統自動改聯繫下一順位、或所有順位都逾時無人回應時，都會被記一次。）
+      </p>
+      <button type="button" class="ghost" onclick="exportAgencyMissStatsExcel()">📊 匯出 Excel（分月統計）</button>
+      <div class="gate-error" id="agencyMissExportMsg" style="text-align:left;"></div>
+    </div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">院區設定</div>
+      <div id="adminCampusList"></div>
+      <button type="button" class="ghost" onclick="addAdminCampus()">＋ 新增院區</button>
+    </div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">照服社（看護公司）設定</div>
+      <div id="adminAgencyList"></div>
+      <button type="button" class="ghost" onclick="addAdminAgency()">＋ 新增照服社</button>
+    </div>
+
+    <div class="admin-block">
+      <div class="admin-block-title">管理員帳號</div>
+      <div class="admin-auth-note">實際登入帳號：<code id="adminAuthEmailNote"></code>　密碼請到 Firebase 主控台的 Authentication 設定（不會存在這個系統裡）</div>
+    </div>
+
+    <div class="submit-row">
+      <button type="button" class="primary" onclick="saveAdminConfig()">儲存所有變更</button>
+    </div>
+    <div class="gate-error" id="adminSaveMsg" style="text-align:right;"></div>
+  </section>
+
+  <!-- ===================== ADMIN: FULL RECORD ARCHIVE ===================== -->
+  <section id="screenAdminRecords" class="screen">
+    <div class="shared-note">這裡顯示資料庫裡「所有」的申請紀錄，不受院區或狀態篩選限制，包含已刪除但尚未清除的資料。刪除的資料可以在這裡「復原」；「永久刪除」則會真正從資料庫清除，無法復原，請小心使用。</div>
+    <div class="records-toolbar">
+      <select id="adminRecCampus">
+        <option value="">全部院區</option>
+      </select>
+      <select id="adminRecStatus">
+        <option value="">全部（含已刪除）</option>
+        <option value="active">未刪除</option>
+        <option value="deleted">已刪除</option>
+      </select>
+      <input type="text" id="adminRecSearch" placeholder="搜尋病人姓名／申請人／單位">
+      <button type="button" class="ghost" onclick="loadAdminRecords()">重新整理</button>
+    </div>
+    <div id="adminRecordsWrap"><div class="empty">載入中…</div></div>
+  </section>
+
+  <!-- ===================== ADMIN: CHANGE LOGS ===================== -->
+  <section id="screenAdminLogs" class="screen">
+    <div class="shared-note">這裡記錄每一次「修改」或「取消申請」的操作：誰、在什麼時候、對哪一筆案件做了什麼。這份紀錄不會被刪除，作為異動留存。</div>
+    <div class="records-toolbar">
+      <input type="text" id="adminLogSearch" placeholder="搜尋姓名／病人姓名／單位">
+      <button type="button" class="ghost" onclick="loadAdminLogs()">重新整理</button>
+    </div>
+    <div id="adminLogsWrap"><div class="empty">載入中…</div></div>
+  </section>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+const DEFAULT_CONFIG = {
+  campuses: {
+    '新店': {
+      units: ["4A","9A","13E","12E","11E","10E","8E","7E","6E","MI-1","MI-2","SICU","CCU","PI","ER"],
+      unitAgencyMap: {},
+    },
+    '安康': {
+      units: ["安康急診","8H","11H","安康ICU"],
+      unitAgencyMap: {},
+    },
+  },
+  agencies: ['侒侒', '順心', '匯鑫', '同心園'], // 只存名稱，密碼一律由 Firebase Authentication 管理，不存進這裡
+};
+
+let APP_CONFIG = null;
+
+// 相容處理：把舊版設定格式（照服社存成 {名稱:密碼}、院區底下有密碼欄位）
+// 自動轉換成新格式（不儲存任何密碼，密碼一律只在 Firebase Authentication 管理）
+function normalizeAppConfig(cfg){
+  if(!cfg) return cfg;
+  if(cfg.agencies && !Array.isArray(cfg.agencies)){
+    cfg.agencies = Object.keys(cfg.agencies);
+  }
+  if(cfg.campuses){
+    Object.values(cfg.campuses).forEach(c=>{
+      delete c.dispatchPassword;
+      delete c.applyPassword;
+      if(!c.unitAgencyMap) c.unitAgencyMap = {};
+    });
+  }
+  delete cfg.adminPassword;
+  return cfg;
+}
+
+async function initAppConfig(){
+  try{
+    const snap = await CONFIG_DOC.get();
+    if(snap.exists){
+      APP_CONFIG = normalizeAppConfig(snap.data());
+    } else {
+      APP_CONFIG = DEFAULT_CONFIG;
+      await CONFIG_DOC.set(DEFAULT_CONFIG);
+    }
+  }catch(err){
+    console.error('系統設定載入失敗，暫時使用預設值', err);
+    APP_CONFIG = DEFAULT_CONFIG;
+  }
+  document.getElementById('appLoadingOverlay').style.display = 'none';
+  document.getElementById('appRoot').style.visibility = 'visible';
+}
+
+const unitSelect = document.querySelector('select[name="unit"]');
+const filterUnit = document.getElementById('filterUnit');
+const statusFilterUnit = document.getElementById('statusFilterUnit');
+
+let currentCampus = null;
+let currentUnit = null; // 護理單位申請目前登入的單位（例如 4A，或代表護理部的特殊代碼）
+const NURSING_DEPT_SENTINEL = '__DEPT__'; // 代表「護理部」這個特殊登入選項，非真實單位
+let pendingAfterCampus = null; // 選完院區後要接著跳去哪個畫面：'form' 或 'dispatch'
+let dispatchUnlockedFor = null; // 記錄目前是哪個院區已通過派班密碼驗證
+let formUnlockedFor = null; // 記錄目前是「院區::單位」已通過護理單位申請密碼驗證
+
+function populateUnitSelects(campus){
+  const units = (APP_CONFIG.campuses[campus] && APP_CONFIG.campuses[campus].units) || [];
+  [filterUnit, statusFilterUnit].forEach(sel=>{
+    if(!sel) return;
+    let placeholder = '全部單位';
+    if(sel===statusFilterUnit) placeholder = '請選擇單位查詢';
+    sel.innerHTML = '<option value="">' + placeholder + '</option>';
+    units.forEach(u=>{
+      const opt = document.createElement('option');
+      opt.value = u; opt.textContent = u;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// 護理單位申請的「單位」欄位鎖定成目前登入的單位，不能改選別的單位
+function lockApplyUnitField(){
+  document.getElementById('unitAndApplicantCard').style.display = '';
+  unitSelect.innerHTML = '';
+  const opt = document.createElement('option');
+  opt.value = currentUnit; opt.textContent = currentUnit;
+  unitSelect.appendChild(opt);
+  unitSelect.value = currentUnit;
+  unitSelect.disabled = false; // 保持可送出表單，但只有一個選項可選
+  unitSelect.required = true;
+  unitSelect.classList.add('locked-select');
+  document.getElementById('unitFieldLabel').classList.add('required');
+  const applicantInput = document.querySelector('input[name="applicantName"]');
+  applicantInput.required = true;
+  document.getElementById('applicantNameLabel').classList.add('required');
+  document.getElementById('erNoteField').style.display = currentUnit === 'ER' ? 'block' : 'none';
+
+  // 依管理面板設定的單位聯繫順位，預先帶入下拉選單（一般單位不可自行更改，統一由管理面板設定）
+  const unitAgencyMap = APP_CONFIG.campuses[currentCampus] && APP_CONFIG.campuses[currentCampus].unitAgencyMap;
+  const preset = (unitAgencyMap && unitAgencyMap[currentUnit]) || [];
+  populateContactPrioritySelects(preset, true);
+}
+
+// 護理部登入時，整個「申請單位與人員」區塊隱藏，不需要選單位、也不需要填申請人姓名
+function unlockApplyUnitFieldForDept(){
+  document.getElementById('unitAndApplicantCard').style.display = 'none';
+  populateUnitSelects(currentCampus);
+  unitSelect.classList.remove('locked-select');
+  unitSelect.required = false;
+  document.getElementById('unitFieldLabel').classList.remove('required');
+  const applicantInput = document.querySelector('input[name="applicantName"]');
+  applicantInput.required = false;
+  applicantInput.value = '';
+  document.getElementById('applicantNameLabel').classList.remove('required');
+  populateContactPrioritySelects([], false); // 護理部可自由選擇任一順位公司
+}
+
+// 填充表單裡「聯繫照服社順序」四個順位下拉選單
+// locked=true 時鎖定為唯讀（一般單位，只能顯示管理面板設定的順位）；false 時可自由編輯（護理部專用）
+// 注意：鎖定時不用 disabled（會導致表單送出時漏掉這個欄位的值），改用 pointer-events 讓它視覺上唯讀但仍會被送出
+function populateContactPrioritySelects(presetValues, locked){
+  const note = document.getElementById('contactPriorityLockNote');
+  if(note) note.style.display = locked ? 'block' : 'none';
+  for(let n=1; n<=4; n++){
+    const sel = document.getElementById('formContactPriority'+n);
+    if(!sel) continue;
+    const currentVal = presetValues[n-1] || '';
+    sel.innerHTML = '<option value="">未選擇</option>' +
+      getCompanies().map(c=>`<option value="${c}"${c===currentVal?' selected':''}>${c}</option>`).join('');
+    sel.classList.toggle('locked-select', !!locked);
+    sel.style.pointerEvents = locked ? 'none' : '';
+    sel.tabIndex = locked ? -1 : 0;
+  }
+}
+
+function updateCampusIndicator(){
+  const el = document.getElementById('campusIndicator');
+  if(currentCampus){
+    el.style.display = 'block';
+    let html = `目前院區：<b>${currentCampus}</b>`;
+    if(currentUnit){
+      const unitLabel = currentUnit === NURSING_DEPT_SENTINEL ? '護理部' : currentUnit;
+      html += `　單位：<b>${unitLabel}</b>　<a href="javascript:void(0)" onclick="switchUnit()">切換單位</a>`;
+    }
+    html += `　<a href="javascript:void(0)" onclick="switchCampus()">切換院區</a>`;
+    html += `　<a href="javascript:void(0)" onclick="showScreen('Menu')">首頁</a>`;
+    el.innerHTML = html;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function selectCampus(campus){
+  currentCampus = campus;
+  currentUnit = null;
+  populateUnitSelects(campus);
+  updateCampusIndicator();
+  const next = pendingAfterCampus;
+  pendingAfterCampus = null;
+  if(next === 'form'){
+    enterFormFlow();
+  } else if(next === 'dispatch'){
+    enterDispatchFlow();
+  } else {
+    showScreen('Menu');
+  }
+}
+
+function stopAllListeners(){
+  if(dispatchListenerUnsub){ dispatchListenerUnsub(); dispatchListenerUnsub = null; }
+  if(agencyListenerUnsub){ agencyListenerUnsub(); agencyListenerUnsub = null; }
+  if(statusBoardListenerUnsub){ statusBoardListenerUnsub(); statusBoardListenerUnsub = null; }
+  if(dispatchOverdueInterval){ clearInterval(dispatchOverdueInterval); dispatchOverdueInterval = null; }
+}
+
+function switchCampus(){
+  stopAllListeners();
+  currentCampus = null;
+  currentUnit = null;
+  dispatchUnlockedFor = null;
+  formUnlockedFor = null;
+  updateCampusIndicator();
+  pendingAfterCampus = null;
+  showScreen('CampusSelect');
+}
+
+function switchUnit(){
+  stopAllListeners();
+  currentUnit = null;
+  formUnlockedFor = null;
+  updateCampusIndicator();
+  enterFormFlow();
+}
+
+function enterFormFlow(){
+  if(!currentCampus){
+    pendingAfterCampus = 'form';
+    showScreen('CampusSelect');
+    return;
+  }
+  if(!currentUnit){
+    renderUnitPickList();
+    showScreen('UnitSelect');
+    return;
+  }
+  if(formUnlockedFor === (currentCampus+'::'+currentUnit)){
+    if(currentUnit === NURSING_DEPT_SENTINEL){
+      unlockApplyUnitFieldForDept();
+    } else {
+      lockApplyUnitField();
+    }
+    updateCampusIndicator();
+    showScreen('Form');
+  } else {
+    showScreen('FormGate');
+    document.getElementById('formGateCampusLabel').textContent =
+      currentUnit === NURSING_DEPT_SENTINEL ? `${currentCampus}・護理部` : `${currentCampus}・${currentUnit}`;
+    const pw = document.getElementById('formPassword');
+    pw.value = '';
+    document.getElementById('formPasswordError').textContent = '';
+    setTimeout(()=>pw.focus(), 50);
+  }
+}
+
+function renderUnitPickList(){
+  const units = (APP_CONFIG.campuses[currentCampus] && APP_CONFIG.campuses[currentCampus].units) || [];
+  const wrap = document.getElementById('unitPickList');
+  const deptBtn = `<button type="button" class="campus-pick-btn dept-pick-btn" onclick="selectUnit('${NURSING_DEPT_SENTINEL}')">🏢 護理部（可代任一單位申請）</button>`;
+  const unitBtns = units.map(u=>
+    `<button type="button" class="campus-pick-btn" onclick="selectUnit('${escapeHtml(u)}')">${escapeHtml(u)}</button>`
+  ).join('');
+  wrap.innerHTML = deptBtn + unitBtns;
+}
+
+function selectUnit(unit){
+  currentUnit = unit;
+  updateCampusIndicator();
+  enterFormFlow();
+}
+
+async function checkFormPassword(){
+  const val = document.getElementById('formPassword').value;
+  document.getElementById('formPasswordError').textContent = '登入中…';
+  const email = currentUnit === NURSING_DEPT_SENTINEL
+    ? emailForCampusDispatch(currentCampus) // 護理部用跟派班管理相同的帳密登入
+    : emailForUnitApply(currentCampus, currentUnit);
+  const ok = await firebaseSignIn(email, val);
+  if(ok){
+    formUnlockedFor = currentCampus+'::'+currentUnit;
+    document.getElementById('formPasswordError').textContent = '';
+    await refreshAppConfig();
+    if(currentUnit === NURSING_DEPT_SENTINEL){
+      unlockApplyUnitFieldForDept();
+    } else {
+      lockApplyUnitField();
+    }
+    updateCampusIndicator();
+    showScreen('Form');
+  } else {
+    document.getElementById('formPasswordError').textContent = '密碼錯誤，請再試一次';
+  }
+}
+
+function enterDispatchFlow(){
+  if(!currentCampus){
+    pendingAfterCampus = 'dispatch';
+    showScreen('CampusSelect');
+  } else {
+    enterDispatch();
+  }
+}
+
+function switchFormSub(tab){
+  document.getElementById('formSubApply').classList.toggle('active', tab==='apply');
+  document.getElementById('formSubStatus').classList.toggle('active', tab==='status');
+  document.getElementById('subTabApply').classList.toggle('active', tab==='apply');
+  document.getElementById('subTabStatus').classList.toggle('active', tab==='status');
+  if(tab==='status'){
+    const label = currentUnit === NURSING_DEPT_SENTINEL ? '護理部' : (currentUnit || '');
+    document.getElementById('statusBoardUnitLabel').textContent = label;
+    loadStatusBoard();
+  }
+}
+statusFilterUnit.addEventListener('change', loadStatusBoard);
+
+let currentAgency = null;
+const CACHE = {}; // key -> application data, shared across dispatch & agency views
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+name).classList.add('active');
+  document.getElementById('backBtn').style.display = (name==='Menu' || name==='CampusSelect') ? 'none' : 'inline-block';
+}
+
+let adminRecordsCameFrom = 'Admin';
+
+function handleBackButton(){
+  const active = document.querySelector('.screen.active');
+  if(active && (active.id === 'screenAdminRecords' || active.id === 'screenAdminLogs')){
+    showScreen(adminRecordsCameFrom);
+    if(adminRecordsCameFrom === 'Dispatch') loadRecords();
+    return;
+  }
+  if(active && active.id === 'screenFormGate'){
+    currentUnit = null;
+    updateCampusIndicator();
+    renderUnitPickList();
+    showScreen('UnitSelect');
+    return;
+  }
+  if(active && active.id === 'screenUnitSelect'){
+    showScreen('CampusSelect');
+    return;
+  }
+  showScreen('Menu');
+}
+
+function enterDispatch(){
+  if(dispatchUnlockedFor === currentCampus){
+    showScreen('Dispatch');
+    loadRecords();
+  } else {
+    showScreen('DispatchGate');
+    const pw = document.getElementById('dispatchPassword');
+    pw.value = '';
+    document.getElementById('dispatchPasswordError').textContent = '';
+    setTimeout(()=>pw.focus(), 50);
+    const preview = document.getElementById('dispatchGatePreview');
+    preview.textContent = '載入中…';
+    readPublicStat('dispatchNew', currentCampus).then(count=>{
+      preview.innerHTML = count > 0
+        ? `🆕 目前有 <b>${count}</b> 筆新申請／更新待處理`
+        : '目前沒有新的申請或更新';
+    });
+  }
+}
+
+async function checkDispatchPassword(){
+  const val = document.getElementById('dispatchPassword').value;
+  document.getElementById('dispatchPasswordError').textContent = '登入中…';
+  const ok = await firebaseSignIn(emailForCampusDispatch(currentCampus), val);
+  if(ok){
+    dispatchUnlockedFor = currentCampus;
+    document.getElementById('dispatchPasswordError').textContent = '';
+    await refreshAppConfig();
+    showScreen('Dispatch');
+    loadRecords();
+  } else {
+    document.getElementById('dispatchPasswordError').textContent = '密碼錯誤，請再試一次';
+  }
+}
+
+function enterAgencyGate(){
+  const listWrap = document.getElementById('agencyPickList');
+  const companies = getCompanies();
+  listWrap.innerHTML = companies.map(c=>
+    `<label><input type="radio" name="agencyPick" value="${escapeHtml(c)}"> ${escapeHtml(c)}<span class="agency-count-badge" data-company="${escapeHtml(c)}"></span></label>`
+  ).join('');
+  document.getElementById('agencyPassword').value = '';
+  document.getElementById('agencyPickError').textContent = '';
+  showScreen('AgencyGate');
+  document.querySelectorAll('.agency-count-badge').forEach(badge=>{
+    const company = badge.dataset.company;
+    badge.classList.remove('show');
+    readPublicStat('agencyNew', company).then(count=>{
+      if(count > 0){
+        badge.textContent = count > 99 ? '+99' : ('+' + count);
+        badge.classList.add('show');
+      }
+    });
+  });
+}
+
+async function enterAgency(){
+  const picked = document.querySelector('input[name="agencyPick"]:checked');
+  const pwInput = document.getElementById('agencyPassword');
+  const errBox = document.getElementById('agencyPickError');
+  if(!picked){
+    errBox.textContent = '請先選擇貴公司';
+    return;
+  }
+  const company = picked.value;
+  const pw = pwInput.value;
+  errBox.textContent = '登入中…';
+  const ok = await firebaseSignIn(emailForAgency(company), pw);
+  if(!ok){
+    errBox.textContent = '密碼錯誤，請再試一次';
+    pwInput.value = '';
+    pwInput.focus();
+    return;
+  }
+  currentAgency = company;
+  errBox.textContent = '';
+  pwInput.value = '';
+  await refreshAppConfig();
+  document.getElementById('agencyNote').textContent =
+    `目前檢視公司：${currentAgency}（僅顯示已將貴公司列入聯繫順位的案件，不會顯示其他公司的順位資訊）`;
+  showScreen('Agency');
+  loadAgencyRecords();
+}
+
+// ===================== ADMIN PANEL =====================
+function enterAdminGate(){
+  document.getElementById('adminPassword').value = '';
+  document.getElementById('adminPasswordError').textContent = '';
+  showScreen('AdminGate');
+  setTimeout(()=>document.getElementById('adminPassword').focus(), 50);
+}
+
+// 重新從 Firestore 抓取最新的系統設定（登入後呼叫，確保看到的是真正儲存過的資料，
+// 而不是頁面剛載入、尚未登入時因為權限問題退回的預設值）
+async function refreshAppConfig(){
+  try{
+    const snap = await CONFIG_DOC.get();
+    if(snap.exists){
+      APP_CONFIG = normalizeAppConfig(snap.data());
+    }
+  }catch(err){
+    console.error('重新讀取系統設定失敗', err);
+  }
+}
+
+async function checkAdminPassword(){
+  const val = document.getElementById('adminPassword').value;
+  document.getElementById('adminPasswordError').textContent = '登入中…';
+  const ok = await firebaseSignIn(emailForAdmin(), val);
+  if(ok){
+    document.getElementById('adminPasswordError').textContent = '';
+    await refreshAppConfig(); // 登入後強制重新抓取，確保管理面板顯示的是真正最新的設定
+    showScreen('Admin');
+    renderAdminPanel();
+  } else {
+    document.getElementById('adminPasswordError').textContent = '密碼錯誤，請再試一次';
+  }
+}
+
+function campusCardHtml(key, cfg){
+  const units = (cfg.units || []).join(', ');
+  const dispatchEmail = key ? emailForCampusDispatch(key) : '（輸入院區名稱後才會產生）';
+  const unitAccountsHtml = (key && cfg.units && cfg.units.length)
+    ? cfg.units.map(u=>`<div>${escapeHtml(u)}：<code>${escapeHtml(emailForUnitApply(key,u))}</code></div>`).join('')
+    : '（請先填單位清單）';
+  const unitAgencyMap = cfg.unitAgencyMap || {};
+  const agencyNames = (APP_CONFIG && APP_CONFIG.agencies) || [];
+  const agencyOptionsHtml = (current)=> ['<option value="">未選擇</option>']
+    .concat(agencyNames.map(a=>`<option value="${escapeHtml(a)}"${current===a?' selected':''}>${escapeHtml(a)}</option>`)).join('');
+  const unitAgencyRowsHtml = (key && cfg.units && cfg.units.length)
+    ? cfg.units.map(u=>{
+        const pri = unitAgencyMap[u] || [];
+        return `
+        <div class="admin-unit-agency-row" data-unit="${escapeHtml(u)}">
+          <span class="admin-unit-agency-name">${escapeHtml(u)}</span>
+          <div class="admin-unit-agency-selects">
+            <select data-field="unitAgencyP1" title="第一順位">${agencyOptionsHtml(pri[0]||'')}</select>
+            <select data-field="unitAgencyP2" title="第二順位">${agencyOptionsHtml(pri[1]||'')}</select>
+            <select data-field="unitAgencyP3" title="第三順位">${agencyOptionsHtml(pri[2]||'')}</select>
+            <select data-field="unitAgencyP4" title="第四順位">${agencyOptionsHtml(pri[3]||'')}</select>
+          </div>
+        </div>
+      `;
+      }).join('')
+    : '（請先填單位清單）';
+  return `
+    <div class="admin-campus-card">
+      <div class="admin-campus-head">
+        <input type="text" class="admin-new-name-input" data-field="campusName" value="${escapeHtml(key)}" placeholder="院區名稱">
+        <button type="button" class="admin-remove-btn" onclick="this.closest('.admin-campus-card').remove()">刪除</button>
+      </div>
+      <div class="admin-row-2">
+        <div class="admin-field" style="grid-column:1/-1;">
+          <label>單位清單（用逗號分隔）</label>
+          <textarea data-field="units">${escapeHtml(units)}</textarea>
+          <div class="admin-auth-note">派班管理實際登入帳號：<code>${escapeHtml(dispatchEmail)}</code>　密碼請到 Firebase 主控台的 Authentication 設定／修改（不會存在這個系統裡）</div>
+        </div>
+      </div>
+      <div class="admin-row-2" style="margin-top:10px;">
+        <div class="admin-field" style="grid-column:1/-1;">
+          <label>各單位護理單位申請登入帳號</label>
+          <div class="admin-auth-note">
+            每個單位各自的實際登入帳號如下，請分別到 Firebase 主控台的 Authentication 建立／管理密碼（密碼一律不會存在這個系統裡）。
+            另外「護理部（可代任一單位申請）」這個選項<b>共用上面的派班管理帳號</b>，不用另外建立。
+            <div class="admin-unit-account-list">${unitAccountsHtml}</div>
+          </div>
+        </div>
+      </div>
+      <div class="admin-row-2" style="margin-top:10px;">
+        <div class="admin-field" style="grid-column:1/-1;">
+          <label>各單位聯繫順位設定（第一～四順位，送出新申請時會自動帶入，仍可手動修改）</label>
+          <div class="admin-unit-agency-list" data-campus="${escapeHtml(key)}">${unitAgencyRowsHtml}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function agencyRowHtml(name){
+  const email = name ? emailForAgency(name) : '（輸入公司名稱後才會產生）';
+  return `
+    <div class="admin-agency-row">
+      <div class="admin-field"><label>公司名稱</label><input type="text" data-field="agencyName" value="${escapeHtml(name)}" placeholder="公司名稱"></div>
+      <div class="admin-field">
+        <div class="admin-auth-note">實際登入帳號：<code>${escapeHtml(email)}</code>　密碼請到 Firebase 主控台的 Authentication 設定（不會存在這個系統裡）</div>
+      </div>
+      <button type="button" class="admin-remove-btn" onclick="this.closest('.admin-agency-row').remove()">刪除</button>
+    </div>
+  `;
+}
+
+function renderAdminPanel(){
+  const campusList = document.getElementById('adminCampusList');
+  campusList.innerHTML = Object.entries(APP_CONFIG.campuses).map(([key,cfg])=>campusCardHtml(key,cfg)).join('');
+  const agencyList = document.getElementById('adminAgencyList');
+  agencyList.innerHTML = (APP_CONFIG.agencies || []).map(name=>agencyRowHtml(name)).join('');
+  document.getElementById('adminAuthEmailNote').textContent = emailForAdmin();
+  const msg = document.getElementById('adminSaveMsg');
+  msg.textContent = '';
+}
+
+function addAdminCampus(){
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = campusCardHtml('', {units:[], unitAgencyMap:{}});
+  document.getElementById('adminCampusList').appendChild(wrapper.firstElementChild);
+}
+
+function addAdminAgency(){
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = agencyRowHtml('');
+  document.getElementById('adminAgencyList').appendChild(wrapper.firstElementChild);
+}
+
+async function saveAdminConfig(){
+  const msgBox = document.getElementById('adminSaveMsg');
+  msgBox.style.color = '';
+  msgBox.textContent = '';
+
+  try{
+    const newCampuses = {};
+    document.querySelectorAll('#adminCampusList .admin-campus-card').forEach(card=>{
+      const name = card.querySelector('[data-field="campusName"]')?.value.trim() || '';
+      if(!name) return; // 沒填院區名稱的就略過
+      const unitsRaw = card.querySelector('[data-field="units"]')?.value || '';
+      const units = unitsRaw.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+      const unitAgencyMap = {};
+      card.querySelectorAll('.admin-unit-agency-row').forEach(row=>{
+        const unit = row.dataset.unit;
+        if(!unit) return;
+        const p1 = row.querySelector('[data-field="unitAgencyP1"]')?.value || '';
+        const p2 = row.querySelector('[data-field="unitAgencyP2"]')?.value || '';
+        const p3 = row.querySelector('[data-field="unitAgencyP3"]')?.value || '';
+        const p4 = row.querySelector('[data-field="unitAgencyP4"]')?.value || '';
+        const pri = [p1, p2, p3, p4];
+        if(pri.some(Boolean)){ unitAgencyMap[unit] = pri; }
+      });
+      newCampuses[name] = { units, unitAgencyMap };
+    });
+
+    const newAgencies = [];
+    document.querySelectorAll('#adminAgencyList .admin-agency-row').forEach(row=>{
+      const name = row.querySelector('[data-field="agencyName"]')?.value.trim() || '';
+      if(!name) return;
+      if(!newAgencies.includes(name)) newAgencies.push(name);
+    });
+
+    if(Object.keys(newCampuses).length === 0){
+      msgBox.style.color = 'var(--red)';
+      msgBox.textContent = '至少需要保留一個院區（請確認院區名稱欄位有填寫）';
+      return;
+    }
+
+    const newConfig = { campuses: newCampuses, agencies: newAgencies };
+    await CONFIG_DOC.set(newConfig);
+    APP_CONFIG = newConfig;
+    if(currentCampus && !APP_CONFIG.campuses[currentCampus]){
+      // 目前選的院區被刪除或改名了，重置院區選擇
+      currentCampus = null;
+      dispatchUnlockedFor = null;
+      formUnlockedFor = null;
+      updateCampusIndicator();
+    } else if(currentCampus){
+      populateUnitSelects(currentCampus);
+    }
+    msgBox.style.color = 'var(--green)';
+    msgBox.textContent = '已儲存所有變更';
+    showToast('系統設定已更新');
+  }catch(err){
+    console.error('儲存管理設定失敗', err);
+    msgBox.style.color = 'var(--red)';
+    msgBox.textContent = '儲存失敗：' + (err && err.message ? err.message : String(err));
+  }
+}
+
+// ===================== ADMIN: FULL RECORD ARCHIVE =====================
+let ADMIN_RECORDS = [];
+
+function enterAdminRecords(){
+  const active = document.querySelector('.screen.active');
+  adminRecordsCameFrom = (active && active.id === 'screenDispatch') ? 'Dispatch' : 'Admin';
+  const sel = document.getElementById('adminRecCampus');
+  sel.innerHTML = '<option value="">全部院區</option>' +
+    Object.keys(APP_CONFIG.campuses).map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  document.getElementById('adminRecStatus').value = '';
+  document.getElementById('adminRecSearch').value = '';
+  showScreen('AdminRecords');
+  loadAdminRecords();
+}
+
+async function loadAdminRecords(){
+  const wrap = document.getElementById('adminRecordsWrap');
+  wrap.innerHTML = '<div class="empty">載入中…</div>';
+  try{
+    const snapshot = await db.collection(APPLICATIONS_COL).get();
+    const items = [];
+    snapshot.forEach(doc=>{
+      items.push({ key: doc.id, data: doc.data() });
+    });
+    items.sort((a,b)=> (b.data.createdAt||'').localeCompare(a.data.createdAt||''));
+    ADMIN_RECORDS = items;
+    renderAdminRecords();
+  }catch(err){
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">載入失敗：' + err.message + '</div>';
+  }
+}
+
+function renderAdminRecords(){
+  const wrap = document.getElementById('adminRecordsWrap');
+  const campusFilter = document.getElementById('adminRecCampus').value;
+  const statusFilter = document.getElementById('adminRecStatus').value;
+  const search = document.getElementById('adminRecSearch').value.trim().toLowerCase();
+
+  const filtered = ADMIN_RECORDS.filter(it=>{
+    const d = it.data;
+    if(campusFilter && (d.campus||'新店') !== campusFilter) return false;
+    if(statusFilter === 'active' && d.isDeleted) return false;
+    if(statusFilter === 'deleted' && !d.isDeleted) return false;
+    if(search){
+      const hay = [d.patientName, d.applicantName, d.unit, d.currentBed].map(v=>(v||'').toLowerCase()).join(' ');
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if(filtered.length === 0){
+    wrap.innerHTML = '<div class="empty">找不到符合條件的紀錄</div>';
+    return;
+  }
+
+  wrap.innerHTML = filtered.map(it=>{
+    const d = it.data;
+    const created = d.createdAt ? new Date(d.createdAt).toLocaleString('zh-TW') : '';
+    const deletedTag = d.isDeleted
+      ? `<span class="badge" style="background:var(--red-soft);color:var(--red);">已刪除${d.deletedAt ? '（'+new Date(d.deletedAt).toLocaleString('zh-TW')+'）' : ''}</span>`
+      : '<span class="badge" style="background:var(--green-soft);color:var(--green);">未刪除</span>';
+    return `
+      <div class="record">
+        <div class="record-head">
+          <div>
+            <div class="record-title">${escapeHtml(d.campus||'新店')}・${escapeHtml(d.unit||'')}${escapeHtml(d.currentBed||'')} ・ ${escapeHtml(d.patientName||'')}（${escapeHtml(String(d.age||''))}歲）</div>
+            <div class="record-sub">申請人：${escapeHtml(d.applicantName||'')} ・ 送出時間：${escapeHtml(created)}</div>
+          </div>
+          ${deletedTag}
+        </div>
+        <div class="record-grid">
+          <div><div class="k">院區</div><div class="v">${escapeHtml(d.campus||'新店')}</div></div>
+          <div><div class="k">單位／床號</div><div class="v">${escapeHtml(d.unit||'')} ${escapeHtml(d.currentBed||'')}</div></div>
+          <div><div class="k">派班狀態</div><div class="v">${escapeHtml(d.dispatchStatus==='contacted' ? '已聯絡看護公司' : '待處理')}</div></div>
+          <div><div class="k">照服社回報</div><div class="v">${escapeHtml(d.agencyStatus||'—')}</div></div>
+          <div><div class="k">看護姓名</div><div class="v">${escapeHtml(d.caregiverName||'—')}</div></div>
+          <div><div class="k">護理師確認</div><div class="v">${d.nurseConfirmed ? '已確認' : '未確認'}</div></div>
+        </div>
+        <div class="record-actions">
+          ${d.isDeleted
+            ? `<button class="copy-btn" onclick="restoreAdminRecord('${it.key}')">↩ 復原</button>`
+            : `<button class="del-btn" onclick="softDeleteAdminRecord('${it.key}')">刪除</button>`}
+          <button class="del-btn" onclick="permanentlyDeleteAdminRecord('${it.key}')">⚠ 永久刪除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('adminRecCampus').addEventListener('change', renderAdminRecords);
+document.getElementById('adminRecStatus').addEventListener('change', renderAdminRecords);
+document.getElementById('adminRecSearch').addEventListener('input', renderAdminRecords);
+
+async function restoreAdminRecord(key){
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update({ isDeleted: false });
+    const item = ADMIN_RECORDS.find(it=>it.key===key);
+    if(item){ item.data.isDeleted = false; }
+    if(CACHE[key]){ CACHE[key].isDeleted = false; }
+    renderAdminRecords();
+    showToast('已復原這筆申請紀錄');
+  }catch(err){ showToast('復原失敗：'+err.message); }
+}
+
+async function softDeleteAdminRecord(key){
+  if(!confirm('確定要刪除這筆申請紀錄嗎？\n\n資料不會真的清除，仍可在這個畫面復原。')) return;
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update({
+      isDeleted: true,
+      deletedAt: new Date().toISOString(),
+    });
+    const item = ADMIN_RECORDS.find(it=>it.key===key);
+    if(item){ item.data.isDeleted = true; item.data.deletedAt = new Date().toISOString(); }
+    if(CACHE[key]){ CACHE[key].isDeleted = true; }
+    renderAdminRecords();
+    showToast('已刪除（可復原）');
+  }catch(err){ showToast('刪除失敗：'+err.message); }
+}
+
+async function permanentlyDeleteAdminRecord(key){
+  const sure = confirm('⚠ 這會把這筆申請紀錄從資料庫「永久刪除」，無法復原！\n\n確定要繼續嗎？');
+  if(!sure) return;
+  const doubleSure = confirm('請再次確認：真的要永久刪除這筆資料嗎？此動作無法復原。');
+  if(!doubleSure) return;
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).delete();
+    ADMIN_RECORDS = ADMIN_RECORDS.filter(it=>it.key!==key);
+    delete CACHE[key];
+    renderAdminRecords();
+    showToast('已永久刪除');
+  }catch(err){ showToast('刪除失敗：'+err.message); }
+}
+
+// ===================== ADMIN: AGENCY MISS STATS EXPORT =====================
+async function exportAgencyMissStatsExcel(){
+  const msgBox = document.getElementById('agencyMissExportMsg');
+  msgBox.style.color = '';
+  msgBox.textContent = '讀取統計資料中…';
+  try{
+    if(typeof XLSX === 'undefined'){
+      msgBox.style.color = 'var(--red)';
+      msgBox.textContent = '匯出功能所需的元件載入失敗，請檢查網路連線後重新整理再試一次。';
+      return;
+    }
+    const snapshot = await db.collection('agencyMissLogs').get();
+    if(snapshot.empty){
+      msgBox.style.color = 'var(--red)';
+      msgBox.textContent = '目前沒有任何逾時未回覆的紀錄，沒有東西可以匯出。';
+      return;
+    }
+
+    // 統計：{ 'YYYY-MM': { 公司: 次數 } }
+    const monthCompanyCount = {};
+    const allCompanies = new Set(Object.keys(APP_CONFIG.agencies || {}));
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      if(!d.missedAt || !d.company) return;
+      const month = d.missedAt.slice(0,7); // 'YYYY-MM'
+      allCompanies.add(d.company);
+      if(!monthCompanyCount[month]) monthCompanyCount[month] = {};
+      monthCompanyCount[month][d.company] = (monthCompanyCount[month][d.company] || 0) + 1;
+    });
+
+    const months = Object.keys(monthCompanyCount).sort();
+    const companies = Array.from(allCompanies).sort();
+
+    // 建立表格：第一列標題（月份 + 各公司名稱 + 總計），每一列一個月份
+    const header = ['月份', ...companies, '當月總計'];
+    const rows = months.map(month=>{
+      const rowCounts = companies.map(c => monthCompanyCount[month][c] || 0);
+      const rowTotal = rowCounts.reduce((a,b)=>a+b, 0);
+      return [month, ...rowCounts, rowTotal];
+    });
+    const totalRow = ['總計', ...companies.map(c=>{
+      return months.reduce((sum,m)=> sum + (monthCompanyCount[m][c]||0), 0);
+    })];
+    totalRow.push(totalRow.slice(1).reduce((a,b)=>a+b,0));
+
+    const sheetData = [header, ...rows, totalRow];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '逾時未回覆統計');
+
+    // 附上明細分頁，方便查核每一筆是哪個案件
+    const detailHeader = ['月份', '公司', '院區', '單位', '病人姓名', '逾時時間'];
+    const detailRows = [];
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      detailRows.push([
+        (d.missedAt||'').slice(0,7),
+        d.company || '',
+        d.campus || '',
+        d.unit || '',
+        d.patientName || '',
+        d.missedAt ? new Date(d.missedAt).toLocaleString('zh-TW') : '',
+      ]);
+    });
+    detailRows.sort((a,b)=> a[0].localeCompare(b[0]));
+    const wsDetail = XLSX.utils.aoa_to_sheet([detailHeader, ...detailRows]);
+    XLSX.utils.book_append_sheet(wb, wsDetail, '逾時明細');
+
+    const fileName = `照服社逾期未回覆統計_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    msgBox.style.color = 'var(--green)';
+    msgBox.textContent = `已匯出：${fileName}`;
+  }catch(err){
+    console.error(err);
+    msgBox.style.color = 'var(--red)';
+    msgBox.textContent = '匯出失敗：' + err.message;
+  }
+}
+
+// ===================== ADMIN: CHANGE LOGS =====================
+let ADMIN_LOGS = [];
+
+function enterAdminLogs(){
+  const active = document.querySelector('.screen.active');
+  adminRecordsCameFrom = (active && active.id === 'screenDispatch') ? 'Dispatch' : 'Admin';
+  document.getElementById('adminLogSearch').value = '';
+  showScreen('AdminLogs');
+  loadAdminLogs();
+}
+
+async function loadAdminLogs(){
+  const wrap = document.getElementById('adminLogsWrap');
+  wrap.innerHTML = '<div class="empty">載入中…</div>';
+  try{
+    const snapshot = await db.collection('changeLogs').get();
+    const items = [];
+    snapshot.forEach(doc=>{
+      items.push({ key: doc.id, data: doc.data() });
+    });
+    items.sort((a,b)=> (b.data.at||'').localeCompare(a.data.at||''));
+    ADMIN_LOGS = items;
+    renderAdminLogs();
+  }catch(err){
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">載入失敗：' + err.message + '</div>';
+  }
+}
+
+function renderAdminLogs(){
+  const wrap = document.getElementById('adminLogsWrap');
+  const search = document.getElementById('adminLogSearch').value.trim().toLowerCase();
+  const filtered = ADMIN_LOGS.filter(it=>{
+    if(!search) return true;
+    const d = it.data;
+    const hay = [d.byName, d.patientName, d.unit, d.campus].map(v=>(v||'').toLowerCase()).join(' ');
+    return hay.includes(search);
+  });
+  if(filtered.length === 0){
+    wrap.innerHTML = '<div class="empty">找不到符合條件的異動紀錄</div>';
+    return;
+  }
+  wrap.innerHTML = filtered.map(it=>{
+    const d = it.data;
+    const at = d.at ? new Date(d.at).toLocaleString('zh-TW') : '';
+    const actionLabel = d.action === 'edit' ? '修改' : (d.action === 'cancel' ? '取消申請' : d.action);
+    const actionColor = d.action === 'edit' ? 'var(--amber)' : 'var(--red)';
+    const actionBg = d.action === 'edit' ? 'var(--amber-soft)' : 'var(--red-soft)';
+    return `
+      <div class="record">
+        <div class="record-head">
+          <div>
+            <div class="record-title">${escapeHtml(d.byName||'（未記名）')} 對 ${escapeHtml(d.campus||'')}・${escapeHtml(d.unit||'')}・${escapeHtml(d.patientName||'')} 執行了「${actionLabel}」</div>
+            <div class="record-sub">時間：${escapeHtml(at)}</div>
+          </div>
+          <span class="badge" style="background:${actionBg};color:${actionColor};">${escapeHtml(actionLabel)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('adminLogSearch').addEventListener('input', renderAdminLogs);
+
+// ER note toggle
+unitSelect.addEventListener('change', ()=>{
+  document.getElementById('erNoteField').style.display = unitSelect.value === 'ER' ? 'block' : 'none';
+});
+
+// transfer option conditional
+document.querySelectorAll('input[name="transferOption"]').forEach(r=>{
+  r.addEventListener('change', ()=>{
+    document.getElementById('transferManualBox').classList.toggle('show', r.value==='手輸入' && r.checked);
+  });
+});
+
+// social case conditional
+document.querySelectorAll('input[name="socialCase"]').forEach(r=>{
+  r.addEventListener('change', ()=>{
+    document.getElementById('socialCaseBox').classList.toggle('show', r.value==='是' && r.checked);
+  });
+});
+
+// checkbox groups: "其他" toggles text box; also make selections mutually clear when "無"/"無管路" chosen
+document.querySelectorAll('.other-toggle').forEach(cb=>{
+  cb.addEventListener('change', ()=>{
+    document.getElementById(cb.dataset.target).classList.toggle('show', cb.checked);
+  });
+});
+document.querySelectorAll('.choice-group[data-group]').forEach(group=>{
+  const noneValues = ["無","無管路"];
+  group.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(noneValues.includes(cb.value) && cb.checked){
+        group.querySelectorAll('input[type=checkbox]').forEach(other=>{
+          if(other!==cb){ other.checked=false; if(other.classList.contains('other-toggle')){ document.getElementById(other.dataset.target).classList.remove('show'); } }
+        });
+      } else if(cb.checked){
+        group.querySelectorAll('input[type=checkbox]').forEach(other=>{
+          if(noneValues.includes(other.value)) other.checked=false;
+        });
+      }
+    });
+  });
+});
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+let editingKey = null; // 非 null 時代表目前正在編輯這筆既有申請，而不是新增
+
+function resetForm(){
+  document.getElementById('applyForm').reset();
+  document.querySelectorAll('.conditional').forEach(c=>c.classList.remove('show'));
+  document.getElementById('erNoteField').style.display='none';
+  exitEditMode();
+}
+
+function exitEditMode(){
+  editingKey = null;
+  document.getElementById('formSubmitBtn').textContent = '送出申請';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('editModeBanner').style.display = 'none';
+}
+
+function cancelEditMode(){
+  document.getElementById('applyForm').reset();
+  document.querySelectorAll('.conditional').forEach(c=>c.classList.remove('show'));
+  document.getElementById('erNoteField').style.display='none';
+  exitEditMode();
+  showToast('已取消編輯');
+}
+
+// 把既有申請的資料回填到表單裡，切換成「編輯模式」
+function editApplication(key){
+  const data = CACHE[key];
+  if(!data){ showToast('找不到這筆資料，請重新整理後再試'); return; }
+  const form = document.getElementById('applyForm');
+  form.reset();
+  document.querySelectorAll('.conditional').forEach(c=>c.classList.remove('show'));
+
+  const setVal = (name, val)=>{
+    const el = form.querySelector(`[name="${name}"]`);
+    if(el) el.value = val || '';
+  };
+  const setRadio = (name, val)=>{
+    const el = form.querySelector(`input[name="${name}"][value="${val}"]`);
+    if(el) el.checked = true;
+  };
+  const setChecks = (name, values)=>{
+    (values||[]).forEach(v=>{
+      const el = form.querySelector(`input[name="${name}"][value="${v}"]`);
+      if(el) el.checked = true;
+    });
+  };
+
+  setVal('unit', data.unit);
+  document.getElementById('erNoteField').style.display = data.unit === 'ER' ? 'block' : 'none';
+  setVal('applicantName', data.applicantName);
+  setVal('patientName', data.patientName);
+  setVal('age', data.age);
+  setVal('currentBed', data.currentBed);
+  setVal('erChartNo', data.erChartNo);
+  setRadio('transferOption', data.transferOption);
+  setVal('transferBedManual', data.transferBedManual);
+  if(data.transferOption === '手輸入'){ document.getElementById('transferManualBox').classList.add('show'); }
+  setRadio('gender', data.gender);
+  setVal('identity', data.identity);
+  setVal('consciousness', data.consciousness);
+  setChecks('specialAlerts', data.specialAlerts);
+  setVal('specialAlertsOther', data.specialAlertsOther);
+  if(data.specialAlertsOther){ document.getElementById('specialAlertsOtherBox').classList.add('show'); }
+  setChecks('tubes', data.tubes);
+  setVal('tubesOther', data.tubesOther);
+  if(data.tubesOther){ document.getElementById('tubesOtherBox').classList.add('show'); }
+  setChecks('specialNeeds', data.specialNeeds);
+  setVal('specialNeedsOther', data.specialNeedsOther);
+  if(data.specialNeedsOther){ document.getElementById('specialNeedsOtherBox').classList.add('show'); }
+  setRadio('restraint', data.restraint);
+  setChecks('isolation', data.isolation);
+  setVal('isolationOther', data.isolationOther);
+  if(data.isolationOther){ document.getElementById('isolationOtherBox').classList.add('show'); }
+  setRadio('socialCase', data.socialCase);
+  setVal('socialWorkerName', data.socialWorkerName);
+  setVal('socialWorkerPhone', data.socialWorkerPhone);
+  if(data.socialCase === '是'){ document.getElementById('socialCaseBox').classList.add('show'); }
+  setRadio('caregiverGender', data.caregiverGender);
+  setRadio('caregiverLanguage', data.caregiverLanguage);
+  setRadio('shiftType', data.shiftType);
+  setVal('startDate', data.startDate);
+  setVal('startTime', data.startTime);
+
+  populateContactPrioritySelects([
+    data.contactPriority1||'', data.contactPriority2||'', data.contactPriority3||'', data.contactPriority4||''
+  ], currentUnit !== NURSING_DEPT_SENTINEL);
+
+  editingKey = key;
+  document.getElementById('formSubmitBtn').textContent = '儲存修改';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  const banner = document.getElementById('editModeBanner');
+  banner.style.display = 'block';
+  banner.innerHTML = `✏️ 目前正在修改：${escapeHtml(data.unit||'')}・${escapeHtml(data.patientName||'')} 的申請資料，儲存後會直接覆蓋原本的內容。`;
+  document.getElementById('submitConfirmBanner').style.display = 'none';
+
+  switchFormSub('apply');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('applyForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+
+  const getMulti = (name)=> fd.getAll(name);
+
+  const data = {
+    campus: currentCampus,
+    unit: fd.get('unit'),
+    applicantName: fd.get('applicantName')?.trim(),
+    patientName: fd.get('patientName')?.trim(),
+    age: fd.get('age'),
+    currentBed: fd.get('currentBed')?.trim(),
+    erChartNo: fd.get('erChartNo')?.trim() || '',
+    transferOption: fd.get('transferOption'),
+    transferBedManual: fd.get('transferBedManual')?.trim() || '',
+    gender: fd.get('gender'),
+    identity: fd.get('identity'),
+    consciousness: fd.get('consciousness'),
+    specialAlerts: getMulti('specialAlerts'),
+    specialAlertsOther: fd.get('specialAlertsOther')?.trim() || '',
+    tubes: getMulti('tubes'),
+    tubesOther: fd.get('tubesOther')?.trim() || '',
+    specialNeeds: getMulti('specialNeeds'),
+    specialNeedsOther: fd.get('specialNeedsOther')?.trim() || '',
+    restraint: fd.get('restraint'),
+    isolation: getMulti('isolation'),
+    isolationOther: fd.get('isolationOther')?.trim() || '',
+    socialCase: fd.get('socialCase'),
+    socialWorkerName: fd.get('socialWorkerName')?.trim() || '',
+    socialWorkerPhone: fd.get('socialWorkerPhone')?.trim() || '',
+    caregiverGender: fd.get('caregiverGender'),
+    caregiverLanguage: fd.get('caregiverLanguage'),
+    shiftType: fd.get('shiftType'),
+    startDate: fd.get('startDate'),
+    startTime: fd.get('startTime'),
+    contactPriority1: fd.get('contactPriority1') || '',
+    contactPriority2: fd.get('contactPriority2') || '',
+    contactPriority3: fd.get('contactPriority3') || '',
+    contactPriority4: fd.get('contactPriority4') || '',
+  };
+
+  if(data.transferOption === '同上'){ data.transferBedFinal = data.currentBed; }
+  else { data.transferBedFinal = data.transferBedManual; }
+
+  if(editingKey){
+    // 修改既有申請前，強制要求輸入姓名，作為異動留存紀錄
+    const editorName = promptForName('修改');
+    if(!editorName) return; // 沒輸入姓名就不能儲存，維持在編輯畫面
+
+    data.editedAt = new Date().toISOString();
+    data.lastEditedBy = editorName;
+    data.seenByDispatch = false; // 通知派班管理：這筆申請有更新
+    try{
+      await db.collection(APPLICATIONS_COL).doc(editingKey).update(data);
+      const existingData = CACHE[editingKey] || {};
+      if(CACHE[editingKey]) Object.assign(CACHE[editingKey], data);
+      await notifyAgenciesOfUpdate(editingKey, existingData);
+      await writeChangeLog('edit', editingKey, data, editorName);
+      const editedAt = new Date(data.editedAt).toLocaleString('zh-TW');
+      showToast(`修改已儲存（${editorName}・${editedAt}）`);
+      const banner = document.getElementById('submitConfirmBanner');
+      banner.style.display = 'block';
+      banner.innerHTML = `✅ 已儲存修改：${escapeHtml(data.unit||'')}・${escapeHtml(data.patientName||'')}　修改人：<b>${escapeHtml(editorName)}</b>　修改時間：<b>${escapeHtml(editedAt)}</b>`;
+      resetForm();
+    }catch(err){
+      console.error(err);
+      showToast('儲存修改失敗：' + err.message);
+    }
+    return;
+  }
+
+  data.status = 'pending';
+  data.createdAt = new Date().toISOString();
+  data.seenByDispatch = false; // 派班管理尚未看過這筆新申請
+  data.seenByUnit = true; // 剛送出的申請，申請單位當然已經知道
+
+  // 依「管理」設定的單位聯繫順位，自動帶入第一～四順位（僅供預設，之後仍可手動調整）
+  const unitAgencyMap = APP_CONFIG.campuses[currentCampus] && APP_CONFIG.campuses[currentCampus].unitAgencyMap;
+  const presetPriorities = unitAgencyMap && unitAgencyMap[data.unit];
+  if(Array.isArray(presetPriorities)){
+    if(presetPriorities[0] && !data.contactPriority1) data.contactPriority1 = presetPriorities[0];
+    if(presetPriorities[1] && !data.contactPriority2) data.contactPriority2 = presetPriorities[1];
+    if(presetPriorities[2] && !data.contactPriority3) data.contactPriority3 = presetPriorities[2];
+    if(presetPriorities[3] && !data.contactPriority4) data.contactPriority4 = presetPriorities[3];
+  }
+
+  const id = 'app_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  try{
+    await db.collection(APPLICATIONS_COL).doc(id).set(data);
+    CACHE[id] = data;
+    const submittedAt = new Date(data.createdAt).toLocaleString('zh-TW');
+
+    let autoSentNote = '';
+    if(data.contactPriority1){
+      const sent = await autoSendToFirstPriority(id, data);
+      if(sent) autoSentNote = `　已自動聯繫：<b>${escapeHtml(data.contactPriority1)}</b>`;
+    }
+
+    showToast('申請已送出（' + submittedAt + '）');
+    const banner = document.getElementById('submitConfirmBanner');
+    banner.style.display = 'block';
+    banner.innerHTML = `✅ 已送出申請：${escapeHtml(data.unit||'')}・${escapeHtml(data.patientName||'')}　送出時間：<b>${escapeHtml(submittedAt)}</b>${autoSentNote}`;
+    resetForm();
+  }catch(err){
+    console.error(err);
+    showToast('送出失敗：' + err.message);
+  }
+});
+
+// 新申請送出時，如果已設定第一順位公司，自動完成「聯繫」動作：
+// 複製需求文字、標記已聯絡看護公司、通知該公司，讓護理師只需要按一次「送出申請」
+async function autoSendToFirstPriority(id, data){
+  const company = data.contactPriority1;
+  if(!company) return false;
+  const text = buildSummaryText(data, {hidePriorities:true});
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(err){ /* 剪貼簿權限可能未開放，忽略即可，資料庫仍會正常標記 */ }
+  const nowIso = new Date().toISOString();
+  const updateObj = {
+    dispatchStatus: 'contacted',
+    activeContactLevel: 1,
+    ['sentToCompanies.' + company]: nowIso,
+    ['seenByCompanies.' + company]: false,
+  };
+  try{
+    await db.collection(APPLICATIONS_COL).doc(id).update(updateObj);
+    data.dispatchStatus = 'contacted';
+    data.activeContactLevel = 1;
+    if(!data.sentToCompanies) data.sentToCompanies = {};
+    data.sentToCompanies[company] = nowIso;
+    if(!data.seenByCompanies) data.seenByCompanies = {};
+    data.seenByCompanies[company] = false;
+    return true;
+  }catch(err){
+    console.error('自動聯繫失敗', err);
+    return false;
+  }
+}
+
+const OVERDUE_MINUTES = 45;
+let dispatchOverdueInterval = null;
+const notifiedOverdueKeys = new Set(); // 這次瀏覽期間已經通知過「逾時」的案件，避免每分鐘重複跳通知
+const escalatingKeys = new Set(); // 正在處理自動改聯繫的案件，避免同一分鐘內重複觸發
+const finalMissLoggedKeys = new Set(); // 已經記錄過「最後一家逾時」統計的案件，避免每分鐘重複寫入
+
+// 取得目前生效中的聯繫順位（1~4），預設為 1
+function getActiveContactLevel(data){
+  return data.activeContactLevel || 1;
+}
+
+// 判斷「目前生效順位的公司，超過 45 分鐘沒有任何回覆」
+function isResponseOverdue(data){
+  const level = getActiveContactLevel(data);
+  const company = data['contactPriority'+level];
+  if(!company) return false;
+  const sentAt = data.sentToCompanies && data.sentToCompanies[company];
+  if(!sentAt) return false;
+  if(data.agencyStatus) return false; // 已經有回覆（尋覓看護／派班／無法承接皆算回覆）
+  if(data.nurseConfirmed || data.isDeleted) return false;
+  const elapsedMin = (Date.now() - new Date(sentAt).getTime()) / 60000;
+  return elapsedMin >= OVERDUE_MINUTES;
+}
+
+// 逾時後，是否還有下一順位可以自動改聯繫
+function getNextPriorityCompany(data){
+  const level = getActiveContactLevel(data);
+  const nextLevel = level + 1;
+  if(nextLevel > 4) return null;
+  const company = data['contactPriority'+nextLevel];
+  return company ? { level: nextLevel, company } : null;
+}
+
+// 每分鐘檢查一次：逾時案件如果還有下一順位，自動改聯繫；沒有下一順位了才持續顯示紅色警示
+async function checkOverdueItems(){
+  const overdueNow = ALL_ITEMS.filter(it=>isResponseOverdue(it.data));
+
+  for(const it of overdueNow){
+    if(escalatingKeys.has(it.key)) continue;
+    const next = getNextPriorityCompany(it.data);
+    if(next){
+      escalatingKeys.add(it.key);
+      await autoEscalateToNextPriority(it.key, it.data, next);
+      escalatingKeys.delete(it.key);
+    }
+  }
+
+  // 自動改聯繫後，重新計算目前仍然逾時（代表已經沒有下一順位可以跳了）的案件，用來跳通知、並記錄最後一家公司逾時
+  const stillOverdue = ALL_ITEMS.filter(it=>isResponseOverdue(it.data) && !getNextPriorityCompany(it.data));
+  const newlyOverdue = stillOverdue.filter(it=>!notifiedOverdueKeys.has(it.key));
+  newlyOverdue.forEach(it=>notifiedOverdueKeys.add(it.key));
+  if(newlyOverdue.length > 0){
+    const names = newlyOverdue.map(it=>it.data.patientName || it.data.unit || '一筆案件');
+    showBrowserNotification(
+      `⚠️ 已跑完所有已設定順位，仍超過 ${OVERDUE_MINUTES} 分鐘未回覆`,
+      names.slice(0,3).join('、') + (names.length>3 ? ' 等' : '')
+    );
+  }
+  for(const it of stillOverdue){
+    if(finalMissLoggedKeys.has(it.key)) continue;
+    finalMissLoggedKeys.add(it.key);
+    const level = getActiveContactLevel(it.data);
+    const company = it.data['contactPriority'+level];
+    if(company){ await writeAgencyMissLog(company, it.key, it.data); }
+  }
+  applyFilters(); // 重新渲染，讓逾時／自動改聯繫的狀態反映最新畫面
+}
+
+// 逾時後自動改聯繫下一順位公司：更新聯繫紀錄、通知該公司，並提醒派班管理已自動換人
+async function autoEscalateToNextPriority(key, data, next){
+  const missedLevel = next.level - 1;
+  const missedCompany = data['contactPriority'+missedLevel];
+  const nowIso = new Date().toISOString();
+  const updateObj = {
+    activeContactLevel: next.level,
+    dispatchStatus: 'contacted',
+    ['sentToCompanies.' + next.company]: nowIso,
+    ['seenByCompanies.' + next.company]: false,
+    seenByDispatch: false,
+  };
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+    data.activeContactLevel = next.level;
+    data.dispatchStatus = 'contacted';
+    if(!data.sentToCompanies) data.sentToCompanies = {};
+    data.sentToCompanies[next.company] = nowIso;
+    if(!data.seenByCompanies) data.seenByCompanies = {};
+    data.seenByCompanies[next.company] = false;
+    if(CACHE[key]) Object.assign(CACHE[key], updateObj);
+    showBrowserNotification(
+      `🔄 已自動改聯繫下一順位：${next.company}`,
+      `${data.patientName || data.unit || '一筆案件'}（原第 ${missedLevel} 順位超過 ${OVERDUE_MINUTES} 分鐘未回覆）`
+    );
+    notifiedOverdueKeys.delete(key); // 換了新的順位，之後如果這家又逾時，要能重新通知
+    if(missedCompany){
+      await writeAgencyMissLog(missedCompany, key, data);
+    }
+  }catch(err){
+    console.error('自動改聯繫下一順位失敗', err);
+  }
+}
+
+// 記錄「該接班但逾時未回覆」的統計事件，供管理後台匯出 Excel 使用
+async function writeAgencyMissLog(company, recordId, data){
+  try{
+    const logId = 'miss_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    await db.collection('agencyMissLogs').doc(logId).set({
+      company,
+      recordId,
+      campus: data.campus || '',
+      unit: data.unit || '',
+      patientName: data.patientName || '',
+      missedAt: new Date().toISOString(),
+    });
+  }catch(err){
+    console.error('寫入逾時統計失敗', err);
+  }
+}
+
+let dispatchListenerUnsub = null;
+
+function loadRecords(){
+  if(dispatchListenerUnsub){ dispatchListenerUnsub(); dispatchListenerUnsub = null; }
+  if(dispatchOverdueInterval){ clearInterval(dispatchOverdueInterval); dispatchOverdueInterval = null; }
+  requestNotificationPermission();
+  const wrap = document.getElementById('recordsWrap');
+  wrap.innerHTML = '<div class="empty">載入中…</div>';
+  let isInitialSnapshot = true;
+
+  dispatchListenerUnsub = db.collection(APPLICATIONS_COL).onSnapshot(snapshot=>{
+    const items = [];
+    const notifyList = [];
+    const declinedNotifyList = [];
+    snapshot.docChanges().forEach(change=>{
+      const data = change.doc.data();
+      if(data.isDeleted) return;
+      const campus = data.campus || '新店';
+      if(campus !== currentCampus) return;
+      const isNew = data.seenByDispatch === false;
+      if(!isInitialSnapshot && isNew && (change.type==='added' || change.type==='modified')){
+        notifyList.push(data.patientName || data.unit || '一筆案件');
+      }
+      if(!isInitialSnapshot && change.type==='modified' && data.agencyStatus === '無法承接'){
+        const prev = CACHE[change.doc.id];
+        if(!prev || prev.agencyStatus !== '無法承接'){
+          declinedNotifyList.push(data.patientName || data.unit || '一筆案件');
+        }
+      }
+    });
+
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      CACHE[doc.id] = data;
+      if(data.isDeleted) return; // 已刪除（軟刪除）的資料不顯示在一般清單
+      const campus = data.campus || '新店'; // 舊資料沒有院區欄位時，預設歸類為新店
+      if(campus !== currentCampus) return;
+      const isNew = data.seenByDispatch === false;
+      const isDeclined = data.agencyStatus === '無法承接' && !data.nurseConfirmed;
+      items.push({key: doc.id, data, isNew, isOverdue: isResponseOverdue(data), isDeclined});
+    });
+
+    if(!isInitialSnapshot && declinedNotifyList.length > 0){
+      showBrowserNotification('⚠️ 看護公司無法承接', declinedNotifyList.slice(0,3).join('、') + (declinedNotifyList.length>3 ? ' 等' : '') + '，請改聯繫下一順位');
+    } else if(!isInitialSnapshot && notifyList.length > 0){
+      showBrowserNotification('派班管理：有新的申請或更新', notifyList.slice(0,3).join('、') + (notifyList.length>3 ? ' 等' : ''));
+    }
+    isInitialSnapshot = false;
+
+    const newCount = items.filter(it=>it.isNew).length;
+    const overdueCount = items.filter(it=>it.isOverdue).length;
+    const declinedCount = items.filter(it=>it.isDeclined).length;
+    writePublicStat('dispatchNew', currentCampus, newCount);
+
+    if(items.length===0){
+      wrap.innerHTML = '<div class="empty">目前沒有申請紀錄</div>';
+      ALL_ITEMS = [];
+      return;
+    }
+    items.sort((a,b)=> (b.isDeclined - a.isDeclined) || (b.isOverdue - a.isOverdue) || (b.isNew - a.isNew) || (b.data.createdAt||'').localeCompare(a.data.createdAt||''));
+    const banner = document.getElementById('dispatchNewBanner');
+    if(banner){
+      const parts = [];
+      if(declinedCount > 0) parts.push(`<div class="new-count-banner" style="background:var(--red-soft);color:var(--red);border-color:#f0c4b8;">✕ 有 ${declinedCount} 筆案件看護公司回報「無法承接」，請盡快改聯繫下一順位</div>`);
+      if(overdueCount > 0) parts.push(`<div class="new-count-banner" style="background:var(--red-soft);color:var(--red);border-color:#f0c4b8;">⚠️ 有 ${overdueCount} 筆案件第一順位公司超過 ${OVERDUE_MINUTES} 分鐘未回覆，請盡快改聯繫下一順位</div>`);
+      if(newCount > 0) parts.push(`<div class="new-count-banner">🆕 有 ${newCount} 筆新申請／更新，請往下查看標示紅色「新」的卡片</div>`);
+      banner.innerHTML = parts.join('');
+    }
+    renderRecords(items);
+    markDispatchItemsSeen(items);
+    checkOverdueItems();
+  }, err=>{
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">載入失敗：' + err.message + '</div>';
+  });
+
+  dispatchOverdueInterval = setInterval(checkOverdueItems, 60000); // 每分鐘檢查一次逾時未回覆
+}
+
+// 標記派班管理已經看過這些新申請／更新，下次進來就不會再顯示新案件提示
+async function markDispatchItemsSeen(items){
+  const toMark = items.filter(it=>it.isNew);
+  for(const it of toMark){
+    try{
+      await db.collection(APPLICATIONS_COL).doc(it.key).update({ seenByDispatch: true });
+      if(CACHE[it.key]) CACHE[it.key].seenByDispatch = true;
+    }catch(err){ /* 標記已讀失敗不影響主要功能，安靜略過 */ }
+  }
+}
+
+let ALL_ITEMS = [];
+
+function renderRecords(items){
+  ALL_ITEMS = items;
+  applyFilters();
+}
+
+function applyFilters(){
+  const unit = document.getElementById('filterUnit').value;
+  const status = document.getElementById('filterStatus').value;
+  const filtered = ALL_ITEMS.filter(it=>{
+    if(unit && it.data.unit !== unit) return false;
+    if(status && (it.data.dispatchStatus || 'pending') !== status) return false;
+    return true;
+  });
+  const wrap = document.getElementById('recordsWrap');
+  if(filtered.length===0){
+    wrap.innerHTML = '<div class="empty">沒有符合條件的申請紀錄</div>';
+    return;
+  }
+  wrap.innerHTML = filtered.map(it=>{
+    const d = it.data;
+    const dispatchStatus = d.dispatchStatus || 'pending';
+    const statusBadge = dispatchStatus==='contacted'
+      ? '<span class="badge contacted">已聯絡看護公司</span>'
+      : '<span class="badge pending">待處理</span>';
+    const created = d.createdAt ? new Date(d.createdAt).toLocaleString('zh-TW') : '';
+    const alerts = (d.specialAlerts||[]).filter(v=>v!=='其他').concat(d.specialAlertsOther?[d.specialAlertsOther]:[]);
+    const tubes = (d.tubes||[]).filter(v=>v!=='其他').concat(d.tubesOther?[d.tubesOther]:[]);
+    const needs = (d.specialNeeds||[]).filter(v=>v!=='其他').concat(d.specialNeedsOther?[d.specialNeedsOther]:[]);
+    const isolation = (d.isolation||[]).filter(v=>v!=='其他').concat(d.isolationOther?[d.isolationOther]:[]);
+
+    const priOptions = (current)=> ['<option value="">未選擇</option>']
+      .concat(getCompanies().map(c=>`<option value="${c}"${current===c?' selected':''}>${c}</option>`)).join('');
+
+    const overdue = isResponseOverdue(d);
+    const declined = d.agencyStatus === '無法承接' && !d.nurseConfirmed && !d.isDeleted;
+
+    return `
+      <div class="record ${it.isNew ? 'record-new' : ''} ${(overdue || declined) ? 'record-overdue' : ''}">
+        <div class="record-head">
+          <div>
+            <div class="record-title">
+              ${it.isNew ? '<span class="new-badge">🆕 新</span>' : ''}
+              ${overdue ? `<span class="new-badge" style="background:var(--red);">⚠️ 超過${OVERDUE_MINUTES}分鐘未回覆</span>` : ''}
+              ${declined ? `<span class="new-badge" style="background:var(--red);">✕ 看護公司無法承接</span>` : ''}
+              ${escapeHtml(d.unit||'')} ・ ${escapeHtml(d.patientName||'')}（${escapeHtml(String(d.age||''))}歲）
+            </div>
+            <div class="record-sub">申請人：${escapeHtml(d.applicantName||'')} ・ 送出時間：${escapeHtml(created)}</div>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="record-grid">
+          <div><div class="k">床號</div><div class="v">${escapeHtml(d.currentBed||'')}${d.erChartNo?'（病歷號：'+escapeHtml(d.erChartNo)+'）':''}</div></div>
+          <div><div class="k">轉出/入住</div><div class="v">${escapeHtml(d.transferBedFinal||'—')}</div></div>
+          <div><div class="k">性別</div><div class="v">${escapeHtml(d.gender||'')}</div></div>
+          <div><div class="k">身份</div><div class="v">${escapeHtml(d.identity||'')}</div></div>
+          <div><div class="k">意識狀況</div><div class="v">${escapeHtml(d.consciousness||'')}</div></div>
+          <div><div class="k">約束</div><div class="v">${escapeHtml(d.restraint||'')}</div></div>
+          <div><div class="k">特殊提醒</div><div class="v">${escapeHtml(alerts.join('、')||'無')}</div></div>
+          <div><div class="k">管路</div><div class="v">${escapeHtml(tubes.join('、')||'無管路')}</div></div>
+          <div><div class="k">特殊需求</div><div class="v">${escapeHtml(needs.join('、')||'—')}</div></div>
+          <div><div class="k">隔離/感染</div><div class="v">${escapeHtml(isolation.join('、')||'無')}</div></div>
+          <div><div class="k">社服個案</div><div class="v">${escapeHtml(d.socialCase||'')}${d.socialCase==='是'?'（'+escapeHtml(d.socialWorkerName||'')+' '+escapeHtml(d.socialWorkerPhone||'')+'）':''}</div></div>
+          <div><div class="k">看護需求</div><div class="v">${escapeHtml(d.caregiverGender||'')}／${escapeHtml(d.caregiverLanguage||'')}／${escapeHtml(d.shiftType||'')}</div></div>
+          <div><div class="k">預計開始</div><div class="v">${escapeHtml(d.startDate||'')} ${escapeHtml(d.startTime||'')}</div></div>
+        </div>
+
+        <div class="dispatch-block">
+          <div class="dispatch-title">派案 ・ 聯繫看護公司</div>
+          <div class="dispatch-row">
+            <div class="pri-field">
+              <label>第一順位</label>
+              <select onchange="updateDispatch('${it.key}','contactPriority1',this.value)">${priOptions(d.contactPriority1||'')}</select>
+            </div>
+            <div class="pri-field">
+              <label>第二順位</label>
+              <select onchange="updateDispatch('${it.key}','contactPriority2',this.value)">${priOptions(d.contactPriority2||'')}</select>
+            </div>
+            <div class="pri-field">
+              <label>第三順位</label>
+              <select onchange="updateDispatch('${it.key}','contactPriority3',this.value)">${priOptions(d.contactPriority3||'')}</select>
+            </div>
+            <div class="pri-field">
+              <label>第四順位</label>
+              <select onchange="updateDispatch('${it.key}','contactPriority4',this.value)">${priOptions(d.contactPriority4||'')}</select>
+            </div>
+          </div>
+          <div class="status-field">
+            <label>狀態</label>
+            <select onchange="updateDispatch('${it.key}','dispatchStatus',this.value)">
+              <option value="pending"${dispatchStatus==='pending'?' selected':''}>待處理</option>
+              <option value="contacted"${dispatchStatus==='contacted'?' selected':''}>已聯絡看護公司</option>
+            </select>
+          </div>
+          <textarea class="summary-box" id="summary-${it.key}" readonly></textarea>
+        </div>
+
+        ${agencyProgressHtml(d)}
+
+        <div class="dispatch-send-row">
+          ${sendButtonsHtml(it.key, d)}
+        </div>
+
+        <div class="record-actions">
+          <button class="copy-btn" onclick="copySummary('${it.key}')">複製需求整理文字</button>
+          <button class="del-btn" onclick="deleteRecord('${it.key}')">刪除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 照服社清單改為動態讀取「管理」面板設定的公司清單，而不是寫死的固定清單，
+// 這樣新增／刪除照服社才會同步反映到聯繫順位下拉選單
+function getCompanies(){
+  const agencies = (APP_CONFIG && APP_CONFIG.agencies) || [];
+  return Array.isArray(agencies) ? agencies : Object.keys(agencies);
+}
+
+function buildSummaryText(d, opts={}){
+  const alerts = (d.specialAlerts||[]).filter(v=>v!=='其他').concat(d.specialAlertsOther?[d.specialAlertsOther]:[]);
+  const tubes = (d.tubes||[]).filter(v=>v!=='其他').concat(d.tubesOther?[d.tubesOther]:[]);
+  const needs = (d.specialNeeds||[]).filter(v=>v!=='其他').concat(d.specialNeedsOther?[d.specialNeedsOther]:[]);
+  const isolation = (d.isolation||[]).filter(v=>v!=='其他').concat(d.isolationOther?[d.isolationOther]:[]);
+  const priorities = [d.contactPriority1, d.contactPriority2, d.contactPriority3, d.contactPriority4]
+    .map((c,i)=> c ? `${i+1}. ${c}` : null).filter(Boolean).join('　');
+
+  const lines = [
+    '【看護需求整理】',
+    `單位／床號：${d.unit||''} ${d.currentBed||''}${d.erChartNo?'（病歷號：'+d.erChartNo+'）':''}`,
+    `轉出/入住：${d.transferBedFinal||'—'}`,
+    `病人：${d.patientName||''}（${d.age||''}歲・${d.gender||''}）`,
+    `身份：${d.identity||''}　意識狀況：${d.consciousness||''}　約束：${d.restraint||''}`,
+    `特殊提醒：${alerts.join('、')||'無'}`,
+    `管路：${tubes.join('、')||'無管路'}`,
+    `特殊需求：${needs.join('、')||'—'}`,
+    `隔離/感染：${isolation.join('、')||'無'}`,
+    `看護需求：${d.caregiverGender||''}／${d.caregiverLanguage||''}／${d.shiftType||''}`,
+    `預計開始：${d.startDate||''} ${d.startTime||''}`,
+    `申請人（護理師）：${d.applicantName||''}`,
+  ];
+  if(d.socialCase==='是' && !opts.hideSocialCase){
+    lines.push(`社服個案：是（${d.socialWorkerName||''} ${d.socialWorkerPhone||''}）`);
+  }
+  if(priorities && !opts.hidePriorities){
+    lines.push(`聯繫順位：${priorities}`);
+  }
+  return lines.join('\n');
+}
+
+async function copySummary(key, boxPrefix='summary', opts={}){
+  const data = CACHE[key];
+  if(!data) return;
+  const text = buildSummaryText(data, opts);
+  const box = document.getElementById(boxPrefix+'-'+key);
+  if(box){
+    box.value = text;
+    box.classList.add('show');
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('已複製需求文字，可直接貼給看護社');
+  }catch(err){
+    if(box){
+      box.focus();
+      box.select();
+      try{ document.execCommand('copy'); showToast('已複製需求文字，可直接貼給看護社'); }
+      catch(e2){ showToast('自動複製失敗，請手動選取下方文字複製'); }
+    }
+  }
+}
+
+async function dispatchToPriority(key, n){
+  const data = CACHE[key];
+  if(!data) return;
+  const company = data['contactPriority'+n];
+  if(!company){
+    showToast('尚未設定第'+n+'順位的看護公司');
+    return;
+  }
+  const text = buildSummaryText(data, {hidePriorities:true});
+  const box = document.getElementById('summary-'+key);
+  if(box){
+    box.value = text;
+    box.classList.add('show');
+  }
+  let copied = false;
+  try{
+    await navigator.clipboard.writeText(text);
+    copied = true;
+  }catch(err){
+    if(box){
+      box.focus();
+      box.select();
+      try{ document.execCommand('copy'); copied = true; } catch(e2){ /* fallback below */ }
+    }
+  }
+  // 自動標記為已聯絡看護公司（代表至少已對外聯繫過一家），並記錄已送出給哪家公司，
+  // 讓該公司登入時能看到「新案件」提示；同時把這個順位設為目前生效順位，供逾時偵測使用
+  const updateObj = { dispatchStatus: 'contacted', activeContactLevel: n };
+  updateObj['sentToCompanies.' + company] = new Date().toISOString();
+  updateObj['seenByCompanies.' + company] = false;
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+  }catch(err){
+    showToast('狀態更新失敗：'+err.message);
+    return;
+  }
+  data.dispatchStatus = 'contacted';
+  data.activeContactLevel = n;
+  if(!data.sentToCompanies) data.sentToCompanies = {};
+  data.sentToCompanies[company] = new Date().toISOString();
+  if(!data.seenByCompanies) data.seenByCompanies = {};
+  data.seenByCompanies[company] = false;
+  notifiedOverdueKeys.delete(key); // 手動換過順位，之後如果又逾時要能重新通知
+  const item = ALL_ITEMS.find(it=>it.key===key);
+  if(item){ item.data.dispatchStatus = 'contacted'; }
+  const dispatchScreenActive = document.getElementById('screenDispatch').classList.contains('active');
+  if(dispatchScreenActive) applyFilters(); // 派案管理畫面開著時立即刷新；其他畫面靠即時監聽自動更新
+  refreshQuickContactBlock(key);
+  showToast(copied
+    ? `已複製需求文字給「${company}」（第${n}順位），並標記為已聯絡看護公司`
+    : `已標記為已聯絡看護公司，但自動複製失敗，請手動選取下方文字複製給「${company}」`);
+}
+
+// 依已設定的順位公司，動態產生「聯繫第N順位」按鈕列
+function sendButtonsHtml(key, d){
+  const buttons = [];
+  for(let n=1; n<=4; n++){
+    const company = d['contactPriority'+n];
+    if(!company) continue;
+    const isPrimary = buttons.length === 0; // 第一個有設定的順位視為主要按鈕
+    buttons.push(`<button class="${isPrimary?'send-btn':'send-btn-alt'}" onclick="dispatchToPriority('${key}',${n})">聯繫第${n}順位・${escapeHtml(company)}</button>`);
+  }
+  if(buttons.length === 0){
+    return '<div class="send-row-empty">尚未設定任何聯繫順位公司</div>';
+  }
+  return buttons.join('');
+}
+
+// 產生「聯繫照服社順序」區塊（派班進度查詢卡片、新增申請送出後都會用到）
+function quickContactBlockHtml(key, d, locked){
+  const priOptions = (current)=> ['<option value="">未選擇</option>']
+    .concat(getCompanies().map(c=>`<option value="${c}"${current===c?' selected':''}>${c}</option>`)).join('');
+  const lockAttr = locked ? ' style="pointer-events:none;" class="locked-select" tabindex="-1"' : '';
+  const lockNote = locked ? '<div class="contact-priority-lock-note" style="margin-bottom:10px;">🔒 此順序由「管理」統一設定，各單位無法自行更改。</div>' : '';
+  return `
+    <div class="dispatch-block">
+      <div class="dispatch-title">聯繫照服社順序</div>
+      ${lockNote}
+      <div class="dispatch-row">
+        <div class="pri-field">
+          <label>第一順位</label>
+          <select onchange="updateDispatch('${key}','contactPriority1',this.value)"${lockAttr}>${priOptions(d.contactPriority1||'')}</select>
+        </div>
+        <div class="pri-field">
+          <label>第二順位</label>
+          <select onchange="updateDispatch('${key}','contactPriority2',this.value)"${lockAttr}>${priOptions(d.contactPriority2||'')}</select>
+        </div>
+        <div class="pri-field">
+          <label>第三順位</label>
+          <select onchange="updateDispatch('${key}','contactPriority3',this.value)"${lockAttr}>${priOptions(d.contactPriority3||'')}</select>
+        </div>
+        <div class="pri-field">
+          <label>第四順位</label>
+          <select onchange="updateDispatch('${key}','contactPriority4',this.value)"${lockAttr}>${priOptions(d.contactPriority4||'')}</select>
+        </div>
+      </div>
+      <textarea class="summary-box" id="summary-${key}" readonly></textarea>
+      <div class="dispatch-send-row">
+        ${sendButtonsHtml(key, d)}
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function formatArrivalTime(val){
+  if(!val) return '';
+  const dt = new Date(val);
+  return isNaN(dt.getTime()) ? val : dt.toLocaleString('zh-TW');
+}
+
+// 產生「看護公司回報進度」的唯讀顯示區塊（派案管理、護理單位查詢頁共用）
+function agencyProgressHtml(d){
+  const status = d.agencyStatus || '';
+  const name = d.caregiverName || '';
+  const arrival = d.caregiverArrivalTime || '';
+  const company = d.respondingCompany || '';
+  if(!status && !name && !arrival) return '';
+  const statusClass = status==='派班' ? 'assigned' : (status==='尋覓看護' ? 'searching' : (status==='無法承接' ? 'declined' : ''));
+  return `
+    <div class="agency-progress-note ${statusClass}">
+      <span class="apn-label">看護公司回報：</span>
+      ${company ? `<span class="apn-company">【${escapeHtml(company)}】</span>` : ''}
+      ${status ? `<span class="apn-status">${escapeHtml(status)}</span>` : ''}
+      ${name ? `<span class="apn-item">看護：${escapeHtml(name)}</span>` : ''}
+      ${arrival ? `<span class="apn-item">到院時間：${escapeHtml(formatArrivalTime(arrival))}</span>` : ''}
+      ${status==='無法承接' ? `<div class="apn-warning">⚠️ 此順位無法承接，請聯繫下一順位的看護公司</div>` : ''}
+    </div>
+  `;
+}
+
+async function updateDispatch(key, field, value){
+  const cached = CACHE[key];
+  if(cached) cached[field] = value;
+  const item = ALL_ITEMS.find(it=>it.key===key);
+  if(item) item.data[field] = value;
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update({[field]: value});
+    const dispatchScreenActive = document.getElementById('screenDispatch').classList.contains('active');
+    if(dispatchScreenActive) applyFilters(); // 派案管理畫面開著時立即刷新；其他畫面靠即時監聽自動更新
+    refreshQuickContactBlock(key);
+    if(field==='dispatchStatus'){
+      showToast(value==='contacted' ? '已標記為已聯絡看護公司' : '已改回待處理');
+    } else if(field.startsWith('contactPriority')){
+      showToast('已更新聯繫順位');
+    }
+  }catch(err){ showToast('更新失敗：'+err.message); }
+}
+
+// 新增申請送出後顯示的「聯繫照服社順序」區塊沒有即時監聽，寫入後手動刷新一次
+function refreshQuickContactBlock(key){
+  // 此區塊已改為表單內建欄位（送出時一起提交），這裡保留為安全的空操作，避免舊呼叫報錯
+}
+
+async function deleteRecord(key){
+  if(!confirm('確定要刪除這筆申請紀錄嗎？\n\n刪除後會從清單消失，但資料不會真的清除，仍可到「管理」→「資料庫記錄查詢」復原。')) return;
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update({
+      isDeleted: true,
+      deletedAt: new Date().toISOString(),
+    });
+    if(CACHE[key]){ CACHE[key].isDeleted = true; }
+    ALL_ITEMS = ALL_ITEMS.filter(it=>it.key!==key);
+    applyFilters();
+    showToast('已刪除（資料仍保留，可在管理後台復原）');
+  }catch(err){ showToast('刪除失敗：'+err.message); }
+}
+
+document.getElementById('filterUnit').addEventListener('change', applyFilters);
+document.getElementById('filterStatus').addEventListener('change', applyFilters);
+
+// 照服社更新看護派案進度（狀態／看護姓名／到院時間）— 會直接寫入同一份資料，
+// 派案管理與護理單位的畫面重新整理後即可看到最新狀態
+async function updateAgencyField(key, field, value){
+  const item = AGENCY_ITEMS.find(it=>it.key===key);
+  if(!item) return;
+  item.data[field] = value;
+  if(CACHE[key]) CACHE[key][field] = value;
+  try{
+    const updateObj = { [field]: value };
+    // 照服社更新狀態／看護姓名／到院時間時，通知派班管理跟申請單位有新更新，並記錄是哪家公司回報的
+    if(field==='agencyStatus' || field==='caregiverName' || field==='caregiverArrivalTime'){
+      updateObj.seenByDispatch = false;
+      updateObj.seenByUnit = false;
+      updateObj.respondingCompany = currentAgency;
+    }
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+    item.data.seenByDispatch = updateObj.seenByDispatch !== undefined ? updateObj.seenByDispatch : item.data.seenByDispatch;
+    item.data.seenByUnit = updateObj.seenByUnit !== undefined ? updateObj.seenByUnit : item.data.seenByUnit;
+    if(updateObj.respondingCompany !== undefined) item.data.respondingCompany = updateObj.respondingCompany;
+    if(CACHE[key]){
+      if(updateObj.seenByDispatch !== undefined) CACHE[key].seenByDispatch = updateObj.seenByDispatch;
+      if(updateObj.seenByUnit !== undefined) CACHE[key].seenByUnit = updateObj.seenByUnit;
+      if(updateObj.respondingCompany !== undefined) CACHE[key].respondingCompany = updateObj.respondingCompany;
+    }
+    renderAgencyRecords(AGENCY_ITEMS);
+    if(field==='agencyStatus'){
+      showToast(value ? `已更新狀態為「${value}」` : '已改回尚未開始');
+    } else if(field==='caregiverName'){
+      showToast('已更新看護姓名');
+    } else if(field==='caregiverArrivalTime'){
+      showToast('已更新看護到院時間');
+    }
+  }catch(err){ showToast('更新失敗：'+err.message); }
+}
+
+// ===================== AGENCY VIEW =====================
+let agencyListenerUnsub = null;
+
+function loadAgencyRecords(){
+  if(agencyListenerUnsub){ agencyListenerUnsub(); agencyListenerUnsub = null; }
+  requestNotificationPermission();
+  const wrap = document.getElementById('agencyWrap');
+  wrap.innerHTML = '<div class="empty">載入中…</div>';
+  let isInitialSnapshot = true;
+
+  agencyListenerUnsub = db.collection(APPLICATIONS_COL).onSnapshot(snapshot=>{
+    const items = [];
+    const notifyList = [];
+
+    snapshot.docChanges().forEach(change=>{
+      const data = change.doc.data();
+      const priorities = [data.contactPriority1, data.contactPriority2, data.contactPriority3, data.contactPriority4];
+      const rank = priorities.indexOf(currentAgency);
+      if(rank === -1) return;
+      if(getActiveContactLevel(data) > rank+1) return; // 順位已經被跳過，不通知
+      const sentAt = data.sentToCompanies && data.sentToCompanies[currentAgency];
+      if(data.isDeleted && !sentAt) return;
+      const seen = data.seenByCompanies && data.seenByCompanies[currentAgency];
+      const isNew = !!sentAt && !seen;
+      if(!isInitialSnapshot && isNew && (change.type==='added' || change.type==='modified')){
+        notifyList.push(data.patientName || data.unit || '一筆案件');
+      }
+    });
+
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      CACHE[doc.id] = data;
+      const priorities = [data.contactPriority1, data.contactPriority2, data.contactPriority3, data.contactPriority4];
+      const rank = priorities.indexOf(currentAgency);
+      if(rank === -1) return; // 沒有被列入貴公司的聯繫順位
+      if(getActiveContactLevel(data) > rank+1) return; // 已逾時自動（或被手動）改聯繫下一順位，這家公司不再看得到
+      const sentAt = data.sentToCompanies && data.sentToCompanies[currentAgency];
+      if(data.isDeleted && !sentAt) return; // 從未實際聯繫過、且已被取消的案件不顯示
+      const seen = data.seenByCompanies && data.seenByCompanies[currentAgency];
+      const isNew = !!sentAt && !seen;
+      items.push({key: doc.id, data, rank: rank+1, isNew});
+    });
+
+    if(!isInitialSnapshot && notifyList.length > 0){
+      showBrowserNotification('照服社：有新案件通知', notifyList.slice(0,3).join('、') + (notifyList.length>3 ? ' 等' : ''));
+    }
+    isInitialSnapshot = false;
+
+    items.sort((a,b)=> (b.isNew - a.isNew) || (a.rank - b.rank) || (b.data.createdAt||'').localeCompare(a.data.createdAt||''));
+    AGENCY_ITEMS = items;
+    const newCount = items.filter(it=>it.isNew).length;
+    writePublicStat('agencyNew', currentAgency, newCount);
+    const banner = document.getElementById('agencyNewBanner');
+    banner.innerHTML = newCount > 0
+      ? `<div class="new-count-banner">🆕 有 ${newCount} 筆新案件通知，請往下查看標示紅色「新案件」的卡片</div>`
+      : '';
+    renderAgencyRecords(items);
+    markAgencyItemsSeen(items);
+  }, err=>{
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">載入失敗：' + err.message + '</div>';
+  });
+}
+
+// 標記目前登入公司已經看過這些「新案件」，下次登入就不會再顯示新案件提示
+async function markAgencyItemsSeen(items){
+  const toMark = items.filter(it=>it.isNew);
+  for(const it of toMark){
+    try{
+      const updateObj = {};
+      updateObj['seenByCompanies.' + currentAgency] = true;
+      await db.collection(APPLICATIONS_COL).doc(it.key).update(updateObj);
+      if(CACHE[it.key]){
+        if(!CACHE[it.key].seenByCompanies) CACHE[it.key].seenByCompanies = {};
+        CACHE[it.key].seenByCompanies[currentAgency] = true;
+      }
+    }catch(err){ /* 標記已讀失敗不影響主要功能，安靜略過 */ }
+  }
+}
+
+let AGENCY_ITEMS = [];
+
+function agencyStatusOptions(current){
+  const opts = [
+    ['', '尚未開始'],
+    ['尋覓看護', '尋覓看護'],
+    ['派班', '派班'],
+    ['無法承接', '無法承接'],
+  ];
+  return opts.map(([v,label])=>`<option value="${v}"${current===v?' selected':''}>${label}</option>`).join('');
+}
+
+function renderAgencyRecords(items){
+  const wrap = document.getElementById('agencyWrap');
+  if(items.length===0){
+    wrap.innerHTML = '<div class="empty">目前沒有指派給貴公司的案件</div>';
+    return;
+  }
+  wrap.innerHTML = items.map(it=>{
+    const d = it.data;
+    const dispatchStatus = d.dispatchStatus || 'pending';
+    const statusBadge = dispatchStatus==='contacted'
+      ? '<span class="badge contacted">已聯絡看護公司</span>'
+      : '<span class="badge pending">待處理</span>';
+    const created = d.createdAt ? new Date(d.createdAt).toLocaleString('zh-TW') : '';
+    const alerts = (d.specialAlerts||[]).filter(v=>v!=='其他').concat(d.specialAlertsOther?[d.specialAlertsOther]:[]);
+    const tubes = (d.tubes||[]).filter(v=>v!=='其他').concat(d.tubesOther?[d.tubesOther]:[]);
+    const needs = (d.specialNeeds||[]).filter(v=>v!=='其他').concat(d.specialNeedsOther?[d.specialNeedsOther]:[]);
+    const isolation = (d.isolation||[]).filter(v=>v!=='其他').concat(d.isolationOther?[d.isolationOther]:[]);
+    const agencyStatus = d.agencyStatus || '';
+    const cancelledNote = d.isDeleted
+      ? `<div class="apn-cancelled-note">⚠ 護理單位已取消這筆申請${d.cancelledByName ? '（取消人：'+escapeHtml(d.cancelledByName)+'）' : ''}，不需要再繼續安排看護。</div>`
+      : '';
+    return `
+      <div class="record ${it.isNew ? 'record-new-dispatch' : ''} ${d.isDeleted ? 'record-cancelled' : ''}">
+        <div class="record-head">
+          <div>
+            <div class="record-title">
+              ${it.isNew ? '<span class="new-badge" style="background:var(--amber);">🆕 新派班通知</span>' : ''}
+              ${d.isDeleted ? '<span class="new-badge" style="background:var(--red);">✕ 已取消</span>' : ''}
+              ${escapeHtml(d.campus||'新店')}・${escapeHtml(d.unit||'')} ・ ${escapeHtml(d.patientName||'')}（${escapeHtml(String(d.age||''))}歲）
+            </div>
+            <div class="record-sub">送出時間：${escapeHtml(created)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+            <span class="rank-badge">第 ${it.rank} 順位</span>
+            ${statusBadge}
+          </div>
+        </div>
+        ${cancelledNote}
+        <div class="record-grid">
+          <div><div class="k">床號</div><div class="v">${escapeHtml(d.currentBed||'')}${d.erChartNo?'（病歷號：'+escapeHtml(d.erChartNo)+'）':''}</div></div>
+          <div><div class="k">轉出/入住</div><div class="v">${escapeHtml(d.transferBedFinal||'—')}</div></div>
+          <div><div class="k">性別</div><div class="v">${escapeHtml(d.gender||'')}</div></div>
+          <div><div class="k">意識狀況</div><div class="v">${escapeHtml(d.consciousness||'')}</div></div>
+          <div><div class="k">約束</div><div class="v">${escapeHtml(d.restraint||'')}</div></div>
+          <div><div class="k">特殊提醒</div><div class="v">${escapeHtml(alerts.join('、')||'無')}</div></div>
+          <div><div class="k">管路</div><div class="v">${escapeHtml(tubes.join('、')||'無管路')}</div></div>
+          <div><div class="k">特殊需求</div><div class="v">${escapeHtml(needs.join('、')||'—')}</div></div>
+          <div><div class="k">隔離/感染</div><div class="v">${escapeHtml(isolation.join('、')||'無')}</div></div>
+          <div><div class="k">社服個案</div><div class="v">${escapeHtml(d.socialCase||'')}${d.socialCase==='是'?'（'+escapeHtml(d.socialWorkerName||'')+' '+escapeHtml(d.socialWorkerPhone||'')+'）':''}</div></div>
+          <div><div class="k">看護需求</div><div class="v">${escapeHtml(d.caregiverGender||'')}／${escapeHtml(d.caregiverLanguage||'')}／${escapeHtml(d.shiftType||'')}</div></div>
+          <div><div class="k">預計開始</div><div class="v">${escapeHtml(d.startDate||'')} ${escapeHtml(d.startTime||'')}</div></div>
+        </div>
+
+        <div class="agency-status-block">
+          <div class="dispatch-title">看護派案進度</div>
+          <div class="agency-status-row">
+            <div class="pri-field">
+              <label>狀態</label>
+              <select onchange="updateAgencyField('${it.key}','agencyStatus',this.value)">${agencyStatusOptions(agencyStatus)}</select>
+            </div>
+            <div class="pri-field agency-caregiver-name" style="${agencyStatus==='派班' ? '' : 'display:none;'}">
+              <label>看護姓名</label>
+              <input type="text" value="${escapeHtml(d.caregiverName||'')}" placeholder="請輸入看護姓名"
+                onchange="updateAgencyField('${it.key}','caregiverName',this.value)">
+            </div>
+            <div class="pri-field">
+              <label>看護到院時間</label>
+              <input type="datetime-local" value="${escapeHtml(d.caregiverArrivalTime||'')}"
+                onchange="updateAgencyField('${it.key}','caregiverArrivalTime',this.value)">
+            </div>
+          </div>
+        </div>
+
+        <textarea class="summary-box" id="agy-summary-${it.key}" readonly></textarea>
+        <div class="record-actions">
+          <button class="copy-btn" onclick="copySummary('${it.key}','agy-summary',{hidePriorities:true})">複製需求整理文字</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===================== STATUS BOARD (護理單位查詢用) =====================
+function formatWait(createdAt){
+  if(!createdAt) return '';
+  const ms = Date.now() - new Date(createdAt).getTime();
+  const hrs = Math.floor(ms/3600000);
+  if(hrs < 1) return '未滿 1 小時';
+  if(hrs < 24) return `已等待 ${hrs} 小時`;
+  const days = Math.floor(hrs/24);
+  return `已等待 ${days} 天`;
+}
+
+let statusBoardListenerUnsub = null;
+
+function loadStatusBoard(){
+  if(statusBoardListenerUnsub){ statusBoardListenerUnsub(); statusBoardListenerUnsub = null; }
+  const wrap = document.getElementById('statusBoardWrap');
+  if(!currentUnit){
+    wrap.innerHTML = '<div class="empty">請先登入單位，才會顯示派班進度</div>';
+    return;
+  }
+  requestNotificationPermission();
+  wrap.innerHTML = '<div class="empty">載入中…</div>';
+  let isInitialSnapshot = true;
+
+  statusBoardListenerUnsub = db.collection(APPLICATIONS_COL).onSnapshot(snapshot=>{
+    const items = [];
+    const notifyList = [];
+
+    snapshot.docChanges().forEach(change=>{
+      const data = change.doc.data();
+      if(data.isDeleted) return;
+      const campus = data.campus || '新店';
+      if(campus !== currentCampus) return;
+      if(data.nurseConfirmed) return;
+      if(data.unit !== currentUnit) return;
+      const isNew = data.seenByUnit === false;
+      if(!isInitialSnapshot && isNew && (change.type==='added' || change.type==='modified')){
+        notifyList.push(data.patientName || '一筆案件');
+      }
+    });
+
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      CACHE[doc.id] = data;
+      if(data.isDeleted) return; // 已刪除（軟刪除）的資料不顯示
+      const campus = data.campus || '新店';
+      if(campus !== currentCampus) return;
+      if(data.nurseConfirmed) return; // 護理師確認過才算完成，從查詢清單移除
+      if(data.unit !== currentUnit) return; // 只顯示自己單位的案件
+      const isNew = data.seenByUnit === false;
+      items.push({key: doc.id, data, isNew});
+    });
+
+    if(!isInitialSnapshot && notifyList.length > 0){
+      showBrowserNotification('派班進度：有狀態更新', notifyList.slice(0,3).join('、') + (notifyList.length>3 ? ' 等' : ''));
+    }
+    isInitialSnapshot = false;
+
+    items.sort((a,b)=> (b.isNew - a.isNew) || (a.data.createdAt||'').localeCompare(b.data.createdAt||''));
+    const newCount = items.filter(it=>it.isNew).length;
+    const banner = document.getElementById('statusBoardNewBanner');
+    if(banner){
+      banner.innerHTML = newCount > 0
+        ? `<div class="new-count-banner">🆕 有 ${newCount} 筆案件狀態更新，請往下查看標示紅色「新」的卡片</div>`
+        : '';
+    }
+    renderStatusBoard(items);
+    markUnitItemsSeen(items);
+  }, err=>{
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">載入失敗：' + err.message + '</div>';
+  });
+}
+
+// 標記申請單位已經看過這些狀態更新，下次進來就不會再顯示新提示
+async function markUnitItemsSeen(items){
+  const toMark = items.filter(it=>it.isNew);
+  for(const it of toMark){
+    try{
+      await db.collection(APPLICATIONS_COL).doc(it.key).update({ seenByUnit: true });
+      if(CACHE[it.key]) CACHE[it.key].seenByUnit = true;
+    }catch(err){ /* 標記已讀失敗不影響主要功能，安靜略過 */ }
+  }
+}
+
+async function confirmByNurse(key){
+  if(!confirm('確認看護已安排到位嗎？確認後這筆案件會從查詢清單移除。')) return;
+  const data = CACHE[key] || {};
+  const updateObj = {
+    nurseConfirmed: true,
+    nurseConfirmedAt: new Date().toISOString(),
+    seenByDispatch: true, // 已確認完成，清除派班管理的新訊息提示
+  };
+  // 清除所有已聯繫過的照服社的新訊息提示
+  [1,2,3,4].forEach(n=>{
+    const company = data['contactPriority'+n];
+    if(company){ updateObj['seenByCompanies.'+company] = true; }
+  });
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+    if(CACHE[key]){ Object.assign(CACHE[key], updateObj); }
+    showToast('已確認，案件已從清單移除');
+    loadStatusBoard();
+  }catch(err){ showToast('確認失敗：'+err.message); }
+}
+
+function renderStatusBoard(items){
+  const wrap = document.getElementById('statusBoardWrap');
+  if(items.length===0){
+    wrap.innerHTML = '<div class="empty">目前沒有尚未確認的案件</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="status-card-grid">' + items.map(it=>{
+    const d = it.data;
+    const dispatchStatus = d.dispatchStatus || 'pending';
+    const statusBadge = dispatchStatus==='contacted'
+      ? '<span class="badge contacted">已聯絡看護公司</span>'
+      : '<span class="badge pending">待處理</span>';
+    const hasCaregiver = d.agencyStatus === '派班';
+    return `
+      <div class="status-card ${dispatchStatus==='contacted'?'contacted':''} ${it.isNew ? 'status-card-new' : ''}">
+        <div class="sc-top">
+          <div>
+            <div class="sc-unit">${it.isNew ? '<span class="new-badge">🆕 新</span>' : ''}${escapeHtml(d.unit||'')}　${escapeHtml(d.currentBed||'')}</div>
+            <div class="sc-patient">${escapeHtml(d.patientName||'')}（${escapeHtml(String(d.age||''))}歲・${escapeHtml(d.gender||'')}）</div>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="sc-meta">
+          申請人：<b>${escapeHtml(d.applicantName||'')}</b><br>
+          看護需求：${escapeHtml(d.caregiverGender||'')}／${escapeHtml(d.caregiverLanguage||'')}／${escapeHtml(d.shiftType||'')}<br>
+          預計開始：${escapeHtml(d.startDate||'')} ${escapeHtml(d.startTime||'')}
+        </div>
+        ${agencyProgressHtml(d)}
+        ${hasCaregiver
+          ? `<div class="sc-confirm"><button class="confirm-btn" onclick="confirmByNurse('${it.key}')">✅ 護理師確認看護已到位</button></div>`
+          : `<div class="sc-wait">${formatWait(d.createdAt)}</div>`}
+
+        ${quickContactBlockHtml(it.key, d, currentUnit !== NURSING_DEPT_SENTINEL)}
+
+        <div class="sc-edit-row">
+          <button class="sc-edit-btn" onclick="editApplication('${it.key}')">✏️ 修改</button>
+          <button class="sc-cancel-btn" onclick="cancelApplicationByUnit('${it.key}')">✕ 取消申請</button>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// 要求輸入姓名以確認操作，沒輸入或取消就回傳 null（呼叫端應中止操作）
+function promptForName(actionLabel){
+  const name = prompt(`請輸入您的姓名以確認「${actionLabel}」：`);
+  if(name === null) return null; // 使用者按取消
+  const trimmed = name.trim();
+  if(!trimmed){
+    showToast('未輸入姓名，已取消操作');
+    return null;
+  }
+  return trimmed;
+}
+
+// 寫入異動紀錄，供管理後台查詢是誰在什麼時候做了修改／取消
+async function writeChangeLog(action, recordId, data, byName){
+  try{
+    const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    await db.collection('changeLogs').doc(logId).set({
+      action, // 'edit' 或 'cancel'
+      recordId,
+      byName,
+      at: new Date().toISOString(),
+      campus: data.campus || '',
+      unit: data.unit || '',
+      patientName: data.patientName || '',
+    });
+  }catch(err){
+    console.error('寫入異動紀錄失敗', err);
+  }
+}
+
+// 通知已經被聯繫過的照服社：這筆案件有更新（讓他們登入時重新看到「新案件」提示）
+async function notifyAgenciesOfUpdate(key, existingData){
+  const companies = [1,2,3,4]
+    .map(n=>existingData['contactPriority'+n])
+    .filter(Boolean);
+  if(companies.length === 0) return;
+  const updateObj = {};
+  companies.forEach(c=>{ updateObj['seenByCompanies.'+c] = false; });
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+    if(CACHE[key]){
+      if(!CACHE[key].seenByCompanies) CACHE[key].seenByCompanies = {};
+      companies.forEach(c=>{ CACHE[key].seenByCompanies[c] = false; });
+    }
+  }catch(err){
+    console.error('通知照服社失敗', err);
+  }
+}
+
+// 護理單位自行取消申請（軟刪除，資料仍保留在資料庫，管理後台可復原）
+async function cancelApplicationByUnit(key){
+  if(!confirm('確定要取消這筆申請嗎？\n\n取消後會從清單消失，如果是誤按，可以請管理員到後台復原。')) return;
+  const cancellerName = promptForName('取消申請');
+  if(!cancellerName) return; // 沒輸入姓名就不能取消
+
+  const data = CACHE[key] || {};
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update({
+      isDeleted: true,
+      deletedAt: new Date().toISOString(),
+      cancelledBy: 'unit',
+      cancelledByName: cancellerName,
+      seenByDispatch: false, // 通知派班管理：這筆申請被取消了
+    });
+    if(CACHE[key]){ CACHE[key].isDeleted = true; CACHE[key].cancelledByName = cancellerName; CACHE[key].seenByDispatch = false; }
+    await notifyAgenciesOfUpdate(key, data);
+    await writeChangeLog('cancel', key, data, cancellerName);
+    showToast(`已取消這筆申請（${cancellerName}）`);
+    loadStatusBoard();
+  }catch(err){ showToast('取消失敗：'+err.message); }
+}
+
+initAppConfig();
+</script>
+</body>
+</html>
