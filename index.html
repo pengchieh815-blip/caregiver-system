@@ -417,6 +417,12 @@
   .dispatch-send-row .send-btn-alt{background:#fff;color:var(--teal-deep);border:1px solid var(--teal);}
   .dispatch-send-row .send-btn-alt:hover{background:var(--teal-soft);}
   .dispatch-send-row .send-row-empty{font-size:12.5px;color:var(--ink-soft);}
+  .save-settings-row{margin-top:12px;}
+  .save-settings-btn{
+    border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+    background:var(--green);color:#fff;
+  }
+  .save-settings-btn:hover{background:#256b46;}
   .empty{text-align:center;color:var(--ink-soft);padding:50px 10px;font-size:14px;}
   .shared-note{font-size:12px;color:var(--ink-soft);margin-bottom:14px;padding:10px 12px;background:var(--amber-soft);border-radius:8px;}
 
@@ -2559,27 +2565,30 @@ function applyFilters(){
           <div class="dispatch-row">
             <div class="pri-field">
               <label>第一順位</label>
-              <select onchange="updateDispatch('${it.key}','contactPriority1',this.value)">${priOptions(d.contactPriority1||'')}</select>
+              <select id="pri1-${it.key}">${priOptions(d.contactPriority1||'')}</select>
             </div>
             <div class="pri-field">
               <label>第二順位</label>
-              <select onchange="updateDispatch('${it.key}','contactPriority2',this.value)">${priOptions(d.contactPriority2||'')}</select>
+              <select id="pri2-${it.key}">${priOptions(d.contactPriority2||'')}</select>
             </div>
             <div class="pri-field">
               <label>第三順位</label>
-              <select onchange="updateDispatch('${it.key}','contactPriority3',this.value)">${priOptions(d.contactPriority3||'')}</select>
+              <select id="pri3-${it.key}">${priOptions(d.contactPriority3||'')}</select>
             </div>
             <div class="pri-field">
               <label>第四順位</label>
-              <select onchange="updateDispatch('${it.key}','contactPriority4',this.value)">${priOptions(d.contactPriority4||'')}</select>
+              <select id="pri4-${it.key}">${priOptions(d.contactPriority4||'')}</select>
             </div>
           </div>
           <div class="status-field">
             <label>狀態</label>
-            <select onchange="updateDispatch('${it.key}','dispatchStatus',this.value)">
+            <select id="dstatus-${it.key}">
               <option value="pending"${dispatchStatus==='pending'?' selected':''}>待處理</option>
               <option value="contacted"${dispatchStatus==='contacted'?' selected':''}>已聯絡看護公司</option>
             </select>
+          </div>
+          <div class="save-settings-row">
+            <button type="button" class="save-settings-btn" onclick="saveDispatchSettings('${it.key}')">送出</button>
           </div>
           <textarea class="summary-box" id="summary-${it.key}" readonly></textarea>
         </div>
@@ -2738,6 +2747,10 @@ function quickContactBlockHtml(key, d, locked){
     .concat(getCompanies().map(c=>`<option value="${c}"${current===c?' selected':''}>${c}</option>`)).join('');
   const lockAttr = locked ? ' style="pointer-events:none;" class="locked-select" tabindex="-1"' : '';
   const lockNote = locked ? '<div class="contact-priority-lock-note" style="margin-bottom:10px;">🔒 此順序由「管理」統一設定，各單位無法自行更改。</div>' : '';
+  const saveRow = locked ? '' : `
+      <div class="save-settings-row">
+        <button type="button" class="save-settings-btn" onclick="saveQuickContactPriorities('${key}')">送出</button>
+      </div>`;
   return `
     <div class="dispatch-block">
       <div class="dispatch-title">聯繫照服社順序</div>
@@ -2745,21 +2758,22 @@ function quickContactBlockHtml(key, d, locked){
       <div class="dispatch-row">
         <div class="pri-field">
           <label>第一順位</label>
-          <select onchange="updateDispatch('${key}','contactPriority1',this.value)"${lockAttr}>${priOptions(d.contactPriority1||'')}</select>
+          <select id="qpri1-${key}"${lockAttr}>${priOptions(d.contactPriority1||'')}</select>
         </div>
         <div class="pri-field">
           <label>第二順位</label>
-          <select onchange="updateDispatch('${key}','contactPriority2',this.value)"${lockAttr}>${priOptions(d.contactPriority2||'')}</select>
+          <select id="qpri2-${key}"${lockAttr}>${priOptions(d.contactPriority2||'')}</select>
         </div>
         <div class="pri-field">
           <label>第三順位</label>
-          <select onchange="updateDispatch('${key}','contactPriority3',this.value)"${lockAttr}>${priOptions(d.contactPriority3||'')}</select>
+          <select id="qpri3-${key}"${lockAttr}>${priOptions(d.contactPriority3||'')}</select>
         </div>
         <div class="pri-field">
           <label>第四順位</label>
-          <select onchange="updateDispatch('${key}','contactPriority4',this.value)"${lockAttr}>${priOptions(d.contactPriority4||'')}</select>
+          <select id="qpri4-${key}"${lockAttr}>${priOptions(d.contactPriority4||'')}</select>
         </div>
       </div>
+      ${saveRow}
       <textarea class="summary-box" id="summary-${key}" readonly></textarea>
       <div class="dispatch-send-row">
         ${sendButtonsHtml(key, d)}
@@ -2798,22 +2812,44 @@ function agencyProgressHtml(d){
   `;
 }
 
-async function updateDispatch(key, field, value){
+// 派案管理卡片：填好四個順位跟狀態後，按「送出」才一次存檔
+async function saveDispatchSettings(key){
+  const p1 = document.getElementById('pri1-'+key)?.value || '';
+  const p2 = document.getElementById('pri2-'+key)?.value || '';
+  const p3 = document.getElementById('pri3-'+key)?.value || '';
+  const p4 = document.getElementById('pri4-'+key)?.value || '';
+  const status = document.getElementById('dstatus-'+key)?.value || 'pending';
+  const updateObj = {
+    contactPriority1: p1, contactPriority2: p2, contactPriority3: p3, contactPriority4: p4,
+    dispatchStatus: status,
+  };
   const cached = CACHE[key];
-  if(cached) cached[field] = value;
+  if(cached) Object.assign(cached, updateObj);
   const item = ALL_ITEMS.find(it=>it.key===key);
-  if(item) item.data[field] = value;
+  if(item) Object.assign(item.data, updateObj);
   try{
-    await db.collection(APPLICATIONS_COL).doc(key).update({[field]: value});
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
     const dispatchScreenActive = document.getElementById('screenDispatch').classList.contains('active');
     if(dispatchScreenActive) applyFilters(); // 派案管理畫面開著時立即刷新；其他畫面靠即時監聽自動更新
-    refreshQuickContactBlock(key);
-    if(field==='dispatchStatus'){
-      showToast(value==='contacted' ? '已標記為已聯絡看護公司' : '已改回待處理');
-    } else if(field.startsWith('contactPriority')){
-      showToast('已更新聯繫順位');
-    }
-  }catch(err){ showToast('更新失敗：'+err.message); }
+    showToast('已送出，設定已儲存');
+  }catch(err){ showToast('送出失敗：'+err.message); }
+}
+
+// 「聯繫照服社順序」區塊（派班進度查詢卡片）：填好四個順位後，按「送出」才一次存檔
+async function saveQuickContactPriorities(key){
+  const p1 = document.getElementById('qpri1-'+key)?.value || '';
+  const p2 = document.getElementById('qpri2-'+key)?.value || '';
+  const p3 = document.getElementById('qpri3-'+key)?.value || '';
+  const p4 = document.getElementById('qpri4-'+key)?.value || '';
+  const updateObj = {
+    contactPriority1: p1, contactPriority2: p2, contactPriority3: p3, contactPriority4: p4,
+  };
+  const cached = CACHE[key];
+  if(cached) Object.assign(cached, updateObj);
+  try{
+    await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
+    showToast('已送出，聯繫順位已儲存');
+  }catch(err){ showToast('送出失敗：'+err.message); }
 }
 
 // 新增申請送出後顯示的「聯繫照服社順序」區塊沒有即時監聽，寫入後手動刷新一次
@@ -2840,37 +2876,42 @@ document.getElementById('filterStatus').addEventListener('change', applyFilters)
 
 // 照服社更新看護派案進度（狀態／看護姓名／到院時間）— 會直接寫入同一份資料，
 // 派案管理與護理單位的畫面重新整理後即可看到最新狀態
-async function updateAgencyField(key, field, value){
+// 狀態下拉選單改變時，只在畫面上切換「看護姓名」欄位的顯示與否，不會馬上存檔
+function toggleAgencyCaregiverNameField(key, status){
+  const field = document.getElementById('agyNameField-'+key);
+  if(field) field.style.display = (status==='派班') ? '' : 'none';
+}
+
+// 照服社填好狀態／看護姓名／到院時間後，按「送出」才一次存檔
+async function saveAgencyStatus(key){
   const item = AGENCY_ITEMS.find(it=>it.key===key);
   if(!item) return;
-  item.data[field] = value;
-  if(CACHE[key]) CACHE[key][field] = value;
+  const status = document.getElementById('agystatus-'+key)?.value || '';
+  const name = document.getElementById('agyname-'+key)?.value || '';
+  const arrival = document.getElementById('agyarrival-'+key)?.value || '';
+
+  const updateObj = {
+    agencyStatus: status,
+    caregiverName: name,
+    caregiverArrivalTime: arrival,
+    // 通知派班管理跟申請單位有新更新，並記錄是哪家公司回報的
+    seenByDispatch: false,
+    seenByUnit: false,
+    respondingCompany: currentAgency,
+  };
+  item.data.agencyStatus = status;
+  item.data.caregiverName = name;
+  item.data.caregiverArrivalTime = arrival;
+  item.data.seenByDispatch = false;
+  item.data.seenByUnit = false;
+  item.data.respondingCompany = currentAgency;
+  if(CACHE[key]) Object.assign(CACHE[key], updateObj);
+
   try{
-    const updateObj = { [field]: value };
-    // 照服社更新狀態／看護姓名／到院時間時，通知派班管理跟申請單位有新更新，並記錄是哪家公司回報的
-    if(field==='agencyStatus' || field==='caregiverName' || field==='caregiverArrivalTime'){
-      updateObj.seenByDispatch = false;
-      updateObj.seenByUnit = false;
-      updateObj.respondingCompany = currentAgency;
-    }
     await db.collection(APPLICATIONS_COL).doc(key).update(updateObj);
-    item.data.seenByDispatch = updateObj.seenByDispatch !== undefined ? updateObj.seenByDispatch : item.data.seenByDispatch;
-    item.data.seenByUnit = updateObj.seenByUnit !== undefined ? updateObj.seenByUnit : item.data.seenByUnit;
-    if(updateObj.respondingCompany !== undefined) item.data.respondingCompany = updateObj.respondingCompany;
-    if(CACHE[key]){
-      if(updateObj.seenByDispatch !== undefined) CACHE[key].seenByDispatch = updateObj.seenByDispatch;
-      if(updateObj.seenByUnit !== undefined) CACHE[key].seenByUnit = updateObj.seenByUnit;
-      if(updateObj.respondingCompany !== undefined) CACHE[key].respondingCompany = updateObj.respondingCompany;
-    }
     renderAgencyRecords(AGENCY_ITEMS);
-    if(field==='agencyStatus'){
-      showToast(value ? `已更新狀態為「${value}」` : '已改回尚未開始');
-    } else if(field==='caregiverName'){
-      showToast('已更新看護姓名');
-    } else if(field==='caregiverArrivalTime'){
-      showToast('已更新看護到院時間');
-    }
-  }catch(err){ showToast('更新失敗：'+err.message); }
+    showToast('已送出，看護派案進度已儲存');
+  }catch(err){ showToast('送出失敗：'+err.message); }
 }
 
 // 照服社確認已收到「取消」通知，確認後這筆案件會從貴公司的清單移除
@@ -3047,18 +3088,19 @@ function renderAgencyRecords(items){
           <div class="agency-status-row">
             <div class="pri-field">
               <label>狀態</label>
-              <select onchange="updateAgencyField('${it.key}','agencyStatus',this.value)">${agencyStatusOptions(agencyStatus)}</select>
+              <select id="agystatus-${it.key}" onchange="toggleAgencyCaregiverNameField('${it.key}', this.value)">${agencyStatusOptions(agencyStatus)}</select>
             </div>
-            <div class="pri-field agency-caregiver-name" style="${agencyStatus==='派班' ? '' : 'display:none;'}">
+            <div class="pri-field agency-caregiver-name" id="agyNameField-${it.key}" style="${agencyStatus==='派班' ? '' : 'display:none;'}">
               <label>看護姓名</label>
-              <input type="text" value="${escapeHtml(d.caregiverName||'')}" placeholder="請輸入看護姓名"
-                onchange="updateAgencyField('${it.key}','caregiverName',this.value)">
+              <input type="text" id="agyname-${it.key}" value="${escapeHtml(d.caregiverName||'')}" placeholder="請輸入看護姓名">
             </div>
             <div class="pri-field">
               <label>看護到院時間</label>
-              <input type="datetime-local" value="${escapeHtml(d.caregiverArrivalTime||'')}"
-                onchange="updateAgencyField('${it.key}','caregiverArrivalTime',this.value)">
+              <input type="datetime-local" id="agyarrival-${it.key}" value="${escapeHtml(d.caregiverArrivalTime||'')}">
             </div>
+          </div>
+          <div class="save-settings-row">
+            <button type="button" class="save-settings-btn" onclick="saveAgencyStatus('${it.key}')">送出</button>
           </div>
         </div>
 
